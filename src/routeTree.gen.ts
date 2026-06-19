@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SymptomsHistoryRouteImport } from './routes/symptoms-history'
 import { Route as SupportCircleRouteImport } from './routes/support-circle'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MoodHistoryRouteImport } from './routes/mood-history'
 import { Route as MedicalRouteImport } from './routes/medical'
+import { Route as GamesRouteImport } from './routes/games'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
@@ -28,6 +30,11 @@ const SupportCircleRoute = SupportCircleRouteImport.update({
   path: '/support-circle',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MoodHistoryRoute = MoodHistoryRouteImport.update({
   id: '/mood-history',
   path: '/mood-history',
@@ -36,6 +43,11 @@ const MoodHistoryRoute = MoodHistoryRouteImport.update({
 const MedicalRoute = MedicalRouteImport.update({
   id: '/medical',
   path: '/medical',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -63,8 +75,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
+  '/games': typeof GamesRoute
   '/medical': typeof MedicalRoute
   '/mood-history': typeof MoodHistoryRoute
+  '/profile': typeof ProfileRoute
   '/support-circle': typeof SupportCircleRoute
   '/symptoms-history': typeof SymptomsHistoryRoute
   '/symptoms/add': typeof SymptomsAddRoute
@@ -73,8 +87,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
+  '/games': typeof GamesRoute
   '/medical': typeof MedicalRoute
   '/mood-history': typeof MoodHistoryRoute
+  '/profile': typeof ProfileRoute
   '/support-circle': typeof SupportCircleRoute
   '/symptoms-history': typeof SymptomsHistoryRoute
   '/symptoms/add': typeof SymptomsAddRoute
@@ -84,8 +100,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
+  '/games': typeof GamesRoute
   '/medical': typeof MedicalRoute
   '/mood-history': typeof MoodHistoryRoute
+  '/profile': typeof ProfileRoute
   '/support-circle': typeof SupportCircleRoute
   '/symptoms-history': typeof SymptomsHistoryRoute
   '/symptoms/add': typeof SymptomsAddRoute
@@ -96,8 +114,10 @@ export interface FileRouteTypes {
     | '/'
     | '/chat'
     | '/community'
+    | '/games'
     | '/medical'
     | '/mood-history'
+    | '/profile'
     | '/support-circle'
     | '/symptoms-history'
     | '/symptoms/add'
@@ -106,8 +126,10 @@ export interface FileRouteTypes {
     | '/'
     | '/chat'
     | '/community'
+    | '/games'
     | '/medical'
     | '/mood-history'
+    | '/profile'
     | '/support-circle'
     | '/symptoms-history'
     | '/symptoms/add'
@@ -116,8 +138,10 @@ export interface FileRouteTypes {
     | '/'
     | '/chat'
     | '/community'
+    | '/games'
     | '/medical'
     | '/mood-history'
+    | '/profile'
     | '/support-circle'
     | '/symptoms-history'
     | '/symptoms/add'
@@ -127,8 +151,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRoute: typeof ChatRoute
   CommunityRoute: typeof CommunityRoute
+  GamesRoute: typeof GamesRoute
   MedicalRoute: typeof MedicalRoute
   MoodHistoryRoute: typeof MoodHistoryRoute
+  ProfileRoute: typeof ProfileRoute
   SupportCircleRoute: typeof SupportCircleRoute
   SymptomsHistoryRoute: typeof SymptomsHistoryRoute
   SymptomsAddRoute: typeof SymptomsAddRoute
@@ -150,6 +176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SupportCircleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mood-history': {
       id: '/mood-history'
       path: '/mood-history'
@@ -162,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/medical'
       fullPath: '/medical'
       preLoaderRoute: typeof MedicalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -199,8 +239,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRoute: ChatRoute,
   CommunityRoute: CommunityRoute,
+  GamesRoute: GamesRoute,
   MedicalRoute: MedicalRoute,
   MoodHistoryRoute: MoodHistoryRoute,
+  ProfileRoute: ProfileRoute,
   SupportCircleRoute: SupportCircleRoute,
   SymptomsHistoryRoute: SymptomsHistoryRoute,
   SymptomsAddRoute: SymptomsAddRoute,
