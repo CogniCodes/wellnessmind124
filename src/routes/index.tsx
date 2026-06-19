@@ -75,11 +75,13 @@ function Dashboard() {
         <h2 className="text-center font-display font-bold text-lg mb-4">How are you feeling today?</h2>
         <div className="grid grid-cols-3 md:grid-cols-5 gap-2.5">
           {MOODS.map((m) => {
-            const active = todayMoods.has(m.name);
+            const active = todayMood === m.name;
             return (
               <button
                 key={m.name}
-                onClick={() => toggleMood(m.name)}
+                role="radio"
+                aria-checked={active}
+                onClick={() => selectMood(m.name)}
                 className="rounded-2xl p-3 flex items-center gap-2 text-left transition-all hover:scale-[1.02]"
                 style={{
                   background: active ? "color-mix(in oklab, var(--primary) 18%, transparent)" : `color-mix(in oklab, ${m.tone} 55%, transparent)`,
