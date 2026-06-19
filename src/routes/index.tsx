@@ -33,13 +33,13 @@ function Dashboard() {
     return "Good Evening";
   })();
 
-  const todayMoods = new Set(moods.filter(m => isToday(m.at)).map(m => m.mood));
+  const todayMood = moods.find(m => isToday(m.at))?.mood;
 
-  const toggleMood = (mood: Mood) => {
+  const selectMood = (mood: Mood) => {
     setMoods((prev) => {
-      const todays = prev.filter(m => isToday(m.at) && m.mood === mood);
-      if (todays.length) return prev.filter(m => !(isToday(m.at) && m.mood === mood));
-      return [{ id: crypto.randomUUID(), mood, at: new Date().toISOString() }, ...prev];
+      const others = prev.filter(m => !isToday(m.at));
+      if (todayMood === mood) return others;
+      return [{ id: crypto.randomUUID(), mood, at: new Date().toISOString() }, ...others];
     });
   };
 
