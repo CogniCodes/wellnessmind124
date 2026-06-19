@@ -104,7 +104,7 @@ function SymptomRow({ log }: { log: SymptomLog }) {
           </span>
           <span>{log.severity}/5</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5" suppressHydrationWarning>
           {log.mood && <span>Mood {moodEmoji(log.mood)} {log.mood}</span>}
           <span>· {new Date(log.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
         </div>

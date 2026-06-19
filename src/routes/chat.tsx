@@ -13,9 +13,9 @@ export const Route = createFileRoute("/chat")({
 });
 
 const WELCOME: ChatMessage[] = [
-  { id: "w1", role: "assistant", at: new Date().toISOString(),
+  { id: "w1", role: "assistant", at: "2025-01-01T09:30:00.000Z",
     content: "I've analyzed your symptoms from today." },
-  { id: "w2", role: "assistant", at: new Date().toISOString(),
+  { id: "w2", role: "assistant", at: "2025-01-01T09:30:00.000Z",
     content: "It looks like you had a headache (intensity 4) and felt low energy. Here's what I suggest:\n• 💧 Drink enough water\n• 🌿 Take a short break and rest your eyes\n• 🌬️ Try 5 minutes of deep breathing\n• 💡 Avoid screens for some time" },
 ];
 
@@ -115,7 +115,7 @@ function Bubble({ role, content, time }: { role: "user" | "assistant"; content: 
       <div className={`max-w-[80%] rounded-3xl px-4 py-3 text-sm soft-shadow ${isUser ? "rounded-br-md text-foreground" : "rounded-bl-md bg-card"}`}
         style={isUser ? { background: "color-mix(in oklab, var(--lavender) 70%, var(--card))" } : undefined}>
         <p className="whitespace-pre-line leading-relaxed">{content}</p>
-        <p className="text-[10px] text-muted-foreground mt-1 text-right">{time}</p>
+        <p className="text-[10px] text-muted-foreground mt-1 text-right" suppressHydrationWarning>{time}</p>
       </div>
     </div>
   );
