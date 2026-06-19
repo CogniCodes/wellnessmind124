@@ -9,15 +9,33 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SymptomsHistoryRouteImport } from './routes/symptoms-history'
 import { Route as SupportCircleRouteImport } from './routes/support-circle'
+import { Route as MoodHistoryRouteImport } from './routes/mood-history'
+import { Route as MedicalRouteImport } from './routes/medical'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SymptomsAddRouteImport } from './routes/symptoms.add'
 
+const SymptomsHistoryRoute = SymptomsHistoryRouteImport.update({
+  id: '/symptoms-history',
+  path: '/symptoms-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SupportCircleRoute = SupportCircleRouteImport.update({
   id: '/support-circle',
   path: '/support-circle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoodHistoryRoute = MoodHistoryRouteImport.update({
+  id: '/mood-history',
+  path: '/mood-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MedicalRoute = MedicalRouteImport.update({
+  id: '/medical',
+  path: '/medical',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommunityRoute = CommunityRouteImport.update({
@@ -45,14 +63,20 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
+  '/medical': typeof MedicalRoute
+  '/mood-history': typeof MoodHistoryRoute
   '/support-circle': typeof SupportCircleRoute
+  '/symptoms-history': typeof SymptomsHistoryRoute
   '/symptoms/add': typeof SymptomsAddRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
+  '/medical': typeof MedicalRoute
+  '/mood-history': typeof MoodHistoryRoute
   '/support-circle': typeof SupportCircleRoute
+  '/symptoms-history': typeof SymptomsHistoryRoute
   '/symptoms/add': typeof SymptomsAddRoute
 }
 export interface FileRoutesById {
@@ -60,20 +84,42 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
   '/community': typeof CommunityRoute
+  '/medical': typeof MedicalRoute
+  '/mood-history': typeof MoodHistoryRoute
   '/support-circle': typeof SupportCircleRoute
+  '/symptoms-history': typeof SymptomsHistoryRoute
   '/symptoms/add': typeof SymptomsAddRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chat' | '/community' | '/support-circle' | '/symptoms/add'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/community'
+    | '/medical'
+    | '/mood-history'
+    | '/support-circle'
+    | '/symptoms-history'
+    | '/symptoms/add'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat' | '/community' | '/support-circle' | '/symptoms/add'
+  to:
+    | '/'
+    | '/chat'
+    | '/community'
+    | '/medical'
+    | '/mood-history'
+    | '/support-circle'
+    | '/symptoms-history'
+    | '/symptoms/add'
   id:
     | '__root__'
     | '/'
     | '/chat'
     | '/community'
+    | '/medical'
+    | '/mood-history'
     | '/support-circle'
+    | '/symptoms-history'
     | '/symptoms/add'
   fileRoutesById: FileRoutesById
 }
@@ -81,17 +127,41 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRoute: typeof ChatRoute
   CommunityRoute: typeof CommunityRoute
+  MedicalRoute: typeof MedicalRoute
+  MoodHistoryRoute: typeof MoodHistoryRoute
   SupportCircleRoute: typeof SupportCircleRoute
+  SymptomsHistoryRoute: typeof SymptomsHistoryRoute
   SymptomsAddRoute: typeof SymptomsAddRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/symptoms-history': {
+      id: '/symptoms-history'
+      path: '/symptoms-history'
+      fullPath: '/symptoms-history'
+      preLoaderRoute: typeof SymptomsHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/support-circle': {
       id: '/support-circle'
       path: '/support-circle'
       fullPath: '/support-circle'
       preLoaderRoute: typeof SupportCircleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mood-history': {
+      id: '/mood-history'
+      path: '/mood-history'
+      fullPath: '/mood-history'
+      preLoaderRoute: typeof MoodHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/medical': {
+      id: '/medical'
+      path: '/medical'
+      fullPath: '/medical'
+      preLoaderRoute: typeof MedicalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/community': {
@@ -129,7 +199,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRoute: ChatRoute,
   CommunityRoute: CommunityRoute,
+  MedicalRoute: MedicalRoute,
+  MoodHistoryRoute: MoodHistoryRoute,
   SupportCircleRoute: SupportCircleRoute,
+  SymptomsHistoryRoute: SymptomsHistoryRoute,
   SymptomsAddRoute: SymptomsAddRoute,
 }
 export const routeTree = rootRouteImport
