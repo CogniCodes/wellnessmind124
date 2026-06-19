@@ -33,13 +33,13 @@ function Dashboard() {
     return "Good Evening";
   })();
 
-  const todayMoods = new Set(moods.filter(m => isToday(m.at)).map(m => m.mood));
+  const todayMood = moods.find(m => isToday(m.at))?.mood;
 
-  const toggleMood = (mood: Mood) => {
+  const selectMood = (mood: Mood) => {
     setMoods((prev) => {
-      const todays = prev.filter(m => isToday(m.at) && m.mood === mood);
-      if (todays.length) return prev.filter(m => !(isToday(m.at) && m.mood === mood));
-      return [{ id: crypto.randomUUID(), mood, at: new Date().toISOString() }, ...prev];
+      const others = prev.filter(m => !isToday(m.at));
+      if (todayMood === mood) return others;
+      return [{ id: crypto.randomUUID(), mood, at: new Date().toISOString() }, ...others];
     });
   };
 
@@ -75,11 +75,13 @@ function Dashboard() {
         <h2 className="text-center font-display font-bold text-lg mb-4">How are you feeling today?</h2>
         <div className="grid grid-cols-3 md:grid-cols-5 gap-2.5">
           {MOODS.map((m) => {
-            const active = todayMoods.has(m.name);
+            const active = todayMood === m.name;
             return (
               <button
                 key={m.name}
-                onClick={() => toggleMood(m.name)}
+                role="radio"
+                aria-checked={active}
+                onClick={() => selectMood(m.name)}
                 className="rounded-2xl p-3 flex items-center gap-2 text-left transition-all hover:scale-[1.02]"
                 style={{
                   background: active ? "color-mix(in oklab, var(--primary) 18%, transparent)" : `color-mix(in oklab, ${m.tone} 55%, transparent)`,

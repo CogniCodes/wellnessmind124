@@ -4,7 +4,8 @@ import { ArrowLeft, MoreHorizontal, Send, Smile } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { usePersistent } from "@/lib/store";
-import type { ChatMessage } from "@/lib/store";
+import type { ChatMessage, MoodEntry, SymptomLog, Profile } from "@/lib/store";
+import { DEFAULT_PROFILE, SEED_MOODS, SEED_SYMPTOMS } from "@/lib/seed";
 import { sendChat } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/chat")({
@@ -21,6 +22,9 @@ const WELCOME: ChatMessage[] = [
 
 function ChatPage() {
   const [messages, setMessages] = usePersistent<ChatMessage[]>("sm.chat", WELCOME);
+  const [moods] = usePersistent<MoodEntry[]>("sm.moods", SEED_MOODS);
+  const [symptoms] = usePersistent<SymptomLog[]>("sm.symptoms", SEED_SYMPTOMS);
+  const [profile] = usePersistent<Profile>("sm.profile", DEFAULT_PROFILE);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -35,7 +39,24 @@ function ChatPage() {
     setInput("");
     setLoading(true);
     try {
-      const reply = await sendChat({ data: { messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })) } });
+      const isToday = (iso: string) => {
+        const d = new Date(iso); const n = new Date();
+        return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+      };
+      const sortedMoods = [...moods].sort((a, b) => +new Date(b.at) - +new Date(a.at));
+      const sortedSymptoms = [...symptoms].sort((a, b) => +new Date(b.at) - +new Date(a.at));
+      const reply = await sendChat({ data: {
+        messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
+        context: {
+          currentMood: sortedMoods.find(m => isToday(m.at))?.mood,
+          recentMoods: sortedMoods.slice(0, 7).map(m => ({ mood: m.mood, at: m.at })),
+          recentSymptoms: sortedSymptoms.slice(0, 8).map(s => ({
+            name: s.name, severity: s.severity, category: s.category, at: s.at, notes: s.notes,
+          })),
+          wellnessScore: profile.wellnessScore,
+          streak: profile.streak,
+        },
+      } });
       setMessages((p) => [...p, { id: crypto.randomUUID(), role: "assistant", content: reply.text, at: new Date().toISOString() }]);
     } catch (e: any) {
       setMessages((p) => [...p, { id: crypto.randomUUID(), role: "assistant", content: "I'm having trouble responding right now. Please try again in a moment. 💜", at: new Date().toISOString() }]);
