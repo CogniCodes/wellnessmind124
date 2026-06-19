@@ -113,17 +113,19 @@ function Dashboard() {
       </div>
 
       {/* FAB Add symptom */}
-      <div className="relative h-0">
+      <div className="relative h-0 mb-8">
         <Link
           to="/symptoms/add"
-          className="absolute left-1/2 -translate-x-1/2 -top-7 z-10 grid place-items-center"
+          className="absolute left-1/2 -translate-x-1/2 -top-2 z-10 grid place-items-center"
         >
           <div className="grid h-14 w-14 place-items-center rounded-full bg-card border-4 border-background soft-shadow">
             <Plus className="h-6 w-6 text-primary" />
           </div>
-          <span className="mt-1 text-xs font-medium text-muted-foreground">Add Symptoms</span>
+          <span className="mt-1 text-xs font-medium text-muted-foreground whitespace-nowrap">Add Symptoms</span>
         </Link>
       </div>
+      <div className="h-12" />
+
 
       {/* Insights */}
       <Section title="Your Insights" action="See all">
@@ -141,15 +143,17 @@ function Dashboard() {
             <p className="font-display font-semibold text-sm mb-2">Mood Trend</p>
             <div className="h-32">
               <ResponsiveContainer>
-                <LineChart data={trendData}>
+                <LineChart data={trendData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                  <YAxis hide domain={[0, 5]} />
                   <Line type="monotone" dataKey="score" stroke="var(--secondary)" strokeWidth={3} dot={{ r: 3, fill: "var(--secondary)" }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
             <div className="flex justify-around mt-1 text-xs">
-              {trendData.map((d) => <span key={d.label}>{moodEmoji(d.mood)}</span>)}
+              {trendData.map((d, i) => <span key={i}>{moodEmoji(d.mood)}</span>)}
             </div>
           </div>
+
           <div className="glass-card rounded-3xl p-4">
             <p className="font-display font-semibold text-sm mb-3">Symptom Frequency</p>
             <div className="space-y-2">
@@ -185,10 +189,10 @@ function Dashboard() {
       {/* Mood Calendar */}
       <Section title="Mood Calendar" action="This Month">
         <div className="flex gap-2 overflow-x-auto scrollbar-thin pb-2">
-          {lastNDaysMoodScore(moods, 8).map((d, i) => {
-            const today = i === 7;
+          {lastNDaysMoodScore(moods, 8).map((d, i, arr) => {
+            const today = i === arr.length - 1;
             return (
-              <div key={d.label} className="flex flex-col items-center min-w-[56px]">
+              <div key={i} className="flex flex-col items-center min-w-[56px]">
                 {today && <span className="text-[10px] font-semibold text-secondary">Today</span>}
                 <div className="rounded-2xl glass-card grid place-items-center w-14 h-16 mt-0.5">
                   <span className="text-xs text-muted-foreground">{d.label}</span>
@@ -199,6 +203,7 @@ function Dashboard() {
           })}
         </div>
       </Section>
+
     </AppShell>
   );
 }
