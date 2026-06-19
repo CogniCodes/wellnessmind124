@@ -4,7 +4,8 @@ import { ArrowLeft, MoreHorizontal, Send, Smile } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { usePersistent } from "@/lib/store";
-import type { ChatMessage } from "@/lib/store";
+import type { ChatMessage, MoodEntry, SymptomLog, Profile } from "@/lib/store";
+import { DEFAULT_PROFILE, SEED_MOODS, SEED_SYMPTOMS } from "@/lib/seed";
 import { sendChat } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/chat")({
