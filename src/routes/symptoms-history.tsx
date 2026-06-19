@@ -69,8 +69,8 @@ function SymptomsHistory() {
       </div>
 
       <div className="space-y-4">
-        {groups.map(([dayLabel, items]) => (
-          <div key={dayLabel}>
+        {groups.map(([dayLabel, items], gi) => (
+          <div key={`${dayLabel}-${gi}`}>
             <div className="flex items-center justify-between mb-2 px-1">
               <p className="font-display font-semibold text-sm">{dayLabel}</p>
               <p className="text-xs text-muted-foreground">{items[0] && new Date(items[0].at).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}</p>

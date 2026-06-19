@@ -6,9 +6,11 @@ export const DEFAULT_PROFILE: Profile = {
   wellnessScore: 82,
 };
 
-const now = Date.now();
+// Use a stable reference timestamp so SSR and client render identical seed data.
+// Snapped to top-of-current-hour to avoid hydration mismatches.
+const REF = (() => { const d = new Date(); d.setMinutes(0, 0, 0); return d.getTime(); })();
 const day = 24 * 60 * 60 * 1000;
-const iso = (offset: number) => new Date(now - offset).toISOString();
+const iso = (offset: number) => new Date(REF - offset).toISOString();
 
 export const SEED_MOODS: MoodEntry[] = [
   { id: "m1", mood: "Happy", at: iso(0) },
