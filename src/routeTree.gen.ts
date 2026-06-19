@@ -9,38 +9,215 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SymptomsHistoryRouteImport } from './routes/symptoms-history'
+import { Route as SupportCircleRouteImport } from './routes/support-circle'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as MoodHistoryRouteImport } from './routes/mood-history'
+import { Route as MedicalRouteImport } from './routes/medical'
+import { Route as GamesRouteImport } from './routes/games'
+import { Route as CommunityRouteImport } from './routes/community'
+import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SymptomsAddRouteImport } from './routes/symptoms.add'
 
+const SymptomsHistoryRoute = SymptomsHistoryRouteImport.update({
+  id: '/symptoms-history',
+  path: '/symptoms-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportCircleRoute = SupportCircleRouteImport.update({
+  id: '/support-circle',
+  path: '/support-circle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoodHistoryRoute = MoodHistoryRouteImport.update({
+  id: '/mood-history',
+  path: '/mood-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MedicalRoute = MedicalRouteImport.update({
+  id: '/medical',
+  path: '/medical',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SymptomsAddRoute = SymptomsAddRouteImport.update({
+  id: '/symptoms/add',
+  path: '/symptoms/add',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
+  '/community': typeof CommunityRoute
+  '/games': typeof GamesRoute
+  '/medical': typeof MedicalRoute
+  '/mood-history': typeof MoodHistoryRoute
+  '/profile': typeof ProfileRoute
+  '/support-circle': typeof SupportCircleRoute
+  '/symptoms-history': typeof SymptomsHistoryRoute
+  '/symptoms/add': typeof SymptomsAddRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
+  '/community': typeof CommunityRoute
+  '/games': typeof GamesRoute
+  '/medical': typeof MedicalRoute
+  '/mood-history': typeof MoodHistoryRoute
+  '/profile': typeof ProfileRoute
+  '/support-circle': typeof SupportCircleRoute
+  '/symptoms-history': typeof SymptomsHistoryRoute
+  '/symptoms/add': typeof SymptomsAddRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
+  '/community': typeof CommunityRoute
+  '/games': typeof GamesRoute
+  '/medical': typeof MedicalRoute
+  '/mood-history': typeof MoodHistoryRoute
+  '/profile': typeof ProfileRoute
+  '/support-circle': typeof SupportCircleRoute
+  '/symptoms-history': typeof SymptomsHistoryRoute
+  '/symptoms/add': typeof SymptomsAddRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/community'
+    | '/games'
+    | '/medical'
+    | '/mood-history'
+    | '/profile'
+    | '/support-circle'
+    | '/symptoms-history'
+    | '/symptoms/add'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/chat'
+    | '/community'
+    | '/games'
+    | '/medical'
+    | '/mood-history'
+    | '/profile'
+    | '/support-circle'
+    | '/symptoms-history'
+    | '/symptoms/add'
+  id:
+    | '__root__'
+    | '/'
+    | '/chat'
+    | '/community'
+    | '/games'
+    | '/medical'
+    | '/mood-history'
+    | '/profile'
+    | '/support-circle'
+    | '/symptoms-history'
+    | '/symptoms/add'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatRoute: typeof ChatRoute
+  CommunityRoute: typeof CommunityRoute
+  GamesRoute: typeof GamesRoute
+  MedicalRoute: typeof MedicalRoute
+  MoodHistoryRoute: typeof MoodHistoryRoute
+  ProfileRoute: typeof ProfileRoute
+  SupportCircleRoute: typeof SupportCircleRoute
+  SymptomsHistoryRoute: typeof SymptomsHistoryRoute
+  SymptomsAddRoute: typeof SymptomsAddRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/symptoms-history': {
+      id: '/symptoms-history'
+      path: '/symptoms-history'
+      fullPath: '/symptoms-history'
+      preLoaderRoute: typeof SymptomsHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support-circle': {
+      id: '/support-circle'
+      path: '/support-circle'
+      fullPath: '/support-circle'
+      preLoaderRoute: typeof SupportCircleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mood-history': {
+      id: '/mood-history'
+      path: '/mood-history'
+      fullPath: '/mood-history'
+      preLoaderRoute: typeof MoodHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/medical': {
+      id: '/medical'
+      path: '/medical'
+      fullPath: '/medical'
+      preLoaderRoute: typeof MedicalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +225,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/symptoms/add': {
+      id: '/symptoms/add'
+      path: '/symptoms/add'
+      fullPath: '/symptoms/add'
+      preLoaderRoute: typeof SymptomsAddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatRoute: ChatRoute,
+  CommunityRoute: CommunityRoute,
+  GamesRoute: GamesRoute,
+  MedicalRoute: MedicalRoute,
+  MoodHistoryRoute: MoodHistoryRoute,
+  ProfileRoute: ProfileRoute,
+  SupportCircleRoute: SupportCircleRoute,
+  SymptomsHistoryRoute: SymptomsHistoryRoute,
+  SymptomsAddRoute: SymptomsAddRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
