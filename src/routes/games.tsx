@@ -77,37 +77,116 @@ function Breath() {
 }
 
 const EMOJIS = ["🌸","🌿","🦋","🌙","☀️","🍑","💜","✨"];
+type MemCard = { id: number; emoji: string; open: boolean; done: boolean };
+
+function buildDeck(): MemCard[] {
+  return shuffle([...EMOJIS, ...EMOJIS]).map((e, i) => ({ id: i, emoji: e, open: false, done: false }));
+}
+
 function Memory() {
-  const [cards, setCards] = useState(() => shuffle([...EMOJIS, ...EMOJIS].map((e, i) => ({ id: i, emoji: e, open: false, done: false }))));
+  const [cards, setCards] = useState<MemCard[]>(() => buildDeck());
   const [picked, setPicked] = useState<number[]>([]);
+  const [moves, setMoves] = useState(0);
+  const [lock, setLock] = useState(false);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const won = cards.every(c => c.done);
+
+  useEffect(() => {
+    if (won || startedAt === null) return;
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 500);
+    return () => clearInterval(id);
+  }, [won, startedAt]);
+
+  const reset = () => {
+    setCards(buildDeck());
+    setPicked([]);
+    setMoves(0);
+    setLock(false);
+    setStartedAt(null);
+    setElapsed(0);
+  };
+
   const open = (id: number) => {
-    if (picked.length === 2 || cards[id].open) return;
-    const next = cards.map(c => c.id === id ? { ...c, open: true } : c);
-    const p = [...picked, id];
-    setCards(next); setPicked(p);
-    if (p.length === 2) {
-      const [a, b] = p;
+    if (lock || won) return;
+    const card = cards.find(c => c.id === id);
+    if (!card || card.open || card.done) return;
+    if (picked.includes(id)) return;
+
+    if (startedAt === null) setStartedAt(Date.now());
+
+    const nextCards = cards.map(c => c.id === id ? { ...c, open: true } : c);
+    const nextPicked = [...picked, id];
+    setCards(nextCards);
+    setPicked(nextPicked);
+
+    if (nextPicked.length === 2) {
+      setLock(true);
+      setMoves(m => m + 1);
+      const [aId, bId] = nextPicked;
+      const a = nextCards.find(c => c.id === aId)!;
+      const b = nextCards.find(c => c.id === bId)!;
+      const match = a.emoji === b.emoji;
       setTimeout(() => {
         setCards(prev => prev.map(c => {
-          if (c.id === a || c.id === b) {
-            const match = next[a].emoji === next[b].emoji;
-            return { ...c, done: c.done || match, open: match };
+          if (c.id === aId || c.id === bId) {
+            return match
+              ? { ...c, done: true, open: true }
+              : { ...c, open: false };
           }
           return c;
         }));
         setPicked([]);
-      }, 700);
+        setLock(false);
+      }, match ? 450 : 800);
     }
   };
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
+  const ss = String(elapsed % 60).padStart(2, "0");
+
   return (
-    <div className="grid grid-cols-4 gap-2 max-w-sm mx-auto">
-      {cards.map(c => (
-        <button key={c.id} onClick={() => open(c.id)}
-          className="aspect-square rounded-2xl grid place-items-center text-2xl"
-          style={{ background: c.open || c.done ? "color-mix(in oklab, var(--lavender) 80%, transparent)" : "var(--card)" }}>
-          {c.open || c.done ? c.emoji : "?"}
-        </button>
-      ))}
+    <div className="max-w-sm mx-auto">
+      <div className="flex items-center justify-between mb-3 text-sm">
+        <span className="font-medium">Moves: <span className="text-primary font-bold">{moves}</span></span>
+        <span className="font-medium tabular-nums" suppressHydrationWarning>⏱ {mm}:{ss}</span>
+        <button onClick={reset} className="text-xs text-primary font-medium">Reset</button>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        {cards.map(c => {
+          const shown = c.open || c.done;
+          return (
+            <button
+              key={c.id}
+              onClick={() => open(c.id)}
+              disabled={lock || c.done}
+              className="aspect-square rounded-2xl grid place-items-center text-2xl transition-transform hover:scale-[1.03] disabled:cursor-default"
+              style={{
+                background: c.done
+                  ? "color-mix(in oklab, var(--success) 60%, var(--card))"
+                  : shown
+                  ? "color-mix(in oklab, var(--lavender) 80%, transparent)"
+                  : "var(--card)",
+              }}
+            >
+              {shown ? c.emoji : "?"}
+            </button>
+          );
+        })}
+      </div>
+      {won && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          className="mt-4 rounded-2xl p-4 text-center soft-shadow"
+          style={{ background: "color-mix(in oklab, var(--success) 50%, var(--card))" }}>
+          <p className="font-display font-bold text-lg">🎉 You did it!</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Finished in <span className="font-semibold text-foreground">{moves}</span> moves
+            {" · "}<span className="font-semibold text-foreground">{mm}:{ss}</span>
+          </p>
+          <button onClick={reset} className="mt-3 rounded-full px-5 py-2 text-white text-sm font-semibold"
+            style={{ background: "var(--primary)" }}>Play again</button>
+        </motion.div>
+      )}
     </div>
   );
 }
