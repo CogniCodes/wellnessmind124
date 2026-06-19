@@ -9,10 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SupportCircleRouteImport } from './routes/support-circle'
+import { Route as CommunityRouteImport } from './routes/community'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SymptomsAddRouteImport } from './routes/symptoms.add'
 
+const SupportCircleRoute = SupportCircleRouteImport.update({
+  id: '/support-circle',
+  path: '/support-circle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -32,35 +44,63 @@ const SymptomsAddRoute = SymptomsAddRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
+  '/community': typeof CommunityRoute
+  '/support-circle': typeof SupportCircleRoute
   '/symptoms/add': typeof SymptomsAddRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
+  '/community': typeof CommunityRoute
+  '/support-circle': typeof SupportCircleRoute
   '/symptoms/add': typeof SymptomsAddRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/chat': typeof ChatRoute
+  '/community': typeof CommunityRoute
+  '/support-circle': typeof SupportCircleRoute
   '/symptoms/add': typeof SymptomsAddRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chat' | '/symptoms/add'
+  fullPaths: '/' | '/chat' | '/community' | '/support-circle' | '/symptoms/add'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat' | '/symptoms/add'
-  id: '__root__' | '/' | '/chat' | '/symptoms/add'
+  to: '/' | '/chat' | '/community' | '/support-circle' | '/symptoms/add'
+  id:
+    | '__root__'
+    | '/'
+    | '/chat'
+    | '/community'
+    | '/support-circle'
+    | '/symptoms/add'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRoute: typeof ChatRoute
+  CommunityRoute: typeof CommunityRoute
+  SupportCircleRoute: typeof SupportCircleRoute
   SymptomsAddRoute: typeof SymptomsAddRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/support-circle': {
+      id: '/support-circle'
+      path: '/support-circle'
+      fullPath: '/support-circle'
+      preLoaderRoute: typeof SupportCircleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat': {
       id: '/chat'
       path: '/chat'
@@ -88,6 +128,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRoute: ChatRoute,
+  CommunityRoute: CommunityRoute,
+  SupportCircleRoute: SupportCircleRoute,
   SymptomsAddRoute: SymptomsAddRoute,
 }
 export const routeTree = rootRouteImport
