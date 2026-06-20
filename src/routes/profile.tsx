@@ -3,8 +3,9 @@ import { User, LogOut, Moon, Sun, Bell, Lock, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
-import { usePersistent } from "@/lib/store";
-import { DEFAULT_PROFILE } from "@/lib/seed";
+import { useVisitor } from "@/lib/visitor";
+import { useMoods, useSymptoms } from "@/lib/db-hooks";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Profile · SereneMind" }] }),
@@ -12,12 +13,44 @@ export const Route = createFileRoute("/profile")({
 });
 
 function Profile() {
-  const [profile, setProfile] = usePersistent("sm.profile", DEFAULT_PROFILE);
+  const { visitor, updateName, signOut } = useVisitor();
+  const { data: moods = [] } = useMoods();
+  const { data: symptoms = [] } = useSymptoms();
   const [dark, setDark] = useState(false);
+  const [name, setName] = useState(visitor?.name ?? "");
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
   }, [dark]);
+
+  useEffect(() => { setName(visitor?.name ?? ""); }, [visitor?.name]);
+
+  const streak = (() => {
+    const days = new Set(moods.map((m) => new Date(m.created_at).toDateString()));
+    let s = 0;
+    const cur = new Date();
+    while (days.has(cur.toDateString())) { s++; cur.setDate(cur.getDate() - 1); }
+    return s;
+  })();
+
+  const wellness = (() => {
+    if (!moods.length) return 50;
+    const SCORE: Record<string, number> = { Happy: 5, Calm: 4, Energetic: 5, Frisky: 4, Confused: 3, "Mood swings": 3, "Low energy": 2, Apathetic: 2, Anxious: 2, Irritated: 2, Sad: 1, Depressed: 1 };
+    const recent = moods.slice(0, 14);
+    const avg = recent.reduce((s, m) => s + (SCORE[m.mood] ?? 3), 0) / recent.length;
+    const sevPenalty = symptoms.slice(0, 10).reduce((s, x) => s + x.severity, 0);
+    return Math.max(10, Math.min(100, Math.round((avg / 5) * 100) - Math.min(30, sevPenalty)));
+  })();
+
+  const saveName = async () => {
+    if (!name.trim() || name === visitor?.name) return;
+    try {
+      await updateName(name);
+      toast.success("Name updated 💜");
+    } catch {
+      toast.error("Could not update name.");
+    }
+  };
 
   return (
     <AppShell>
@@ -29,21 +62,21 @@ function Profile() {
           style={{ background: "linear-gradient(135deg, var(--soft-pink), var(--lavender))" }}>
           🐻
         </div>
-        <h2 className="font-display text-xl font-bold mt-3">{profile.name}</h2>
-        <p className="text-xs text-muted-foreground">Member since this week ✨</p>
+        <h2 className="font-display text-xl font-bold mt-3">{visitor?.name ?? "—"}</h2>
+        <p className="text-xs text-muted-foreground">Your safe space ✨</p>
         <div className="grid grid-cols-2 gap-3 mt-5">
           <div className="rounded-2xl p-3" style={{ background: "color-mix(in oklab, var(--soft-pink) 50%, transparent)" }}>
             <p className="text-xs text-muted-foreground">Streak</p>
-            <p className="font-display font-bold text-lg">{profile.streak} days</p>
+            <p className="font-display font-bold text-lg">{streak} day{streak === 1 ? "" : "s"}</p>
           </div>
           <div className="rounded-2xl p-3" style={{ background: "color-mix(in oklab, var(--lavender) 50%, transparent)" }}>
             <p className="text-xs text-muted-foreground">Wellness</p>
-            <p className="font-display font-bold text-lg">{profile.wellnessScore}/100</p>
+            <p className="font-display font-bold text-lg">{wellness}/100</p>
           </div>
         </div>
         <label className="block mt-4 text-left">
           <span className="text-xs text-muted-foreground">Name</span>
-          <input value={profile.name} onChange={(e) => setProfile(p => ({ ...p, name: e.target.value }))}
+          <input value={name} onChange={(e) => setName(e.target.value)} onBlur={saveName}
             className="w-full mt-1 rounded-2xl bg-muted/40 px-3 py-2.5 text-sm outline-none" />
         </label>
       </div>
@@ -52,7 +85,7 @@ function Profile() {
         <Row icon={<Bell className="h-4 w-4" />} label="Notifications" />
         <Row icon={dark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />} label="Dark mode"
           right={
-            <button onClick={() => setDark(d => !d)}
+            <button onClick={() => setDark((d) => !d)}
               className="h-6 w-11 rounded-full relative transition-colors"
               style={{ background: dark ? "var(--primary)" : "var(--muted)" }}>
               <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all"
@@ -63,7 +96,14 @@ function Profile() {
         <Row icon={<Sparkles className="h-4 w-4" />} label="About SereneMind" />
       </div>
 
-      <button className="w-full mt-4 rounded-full py-3 text-sm font-semibold flex items-center justify-center gap-2 text-destructive">
+      <button
+        onClick={() => {
+          if (confirm("Sign out and forget this device? Your saved data stays in the cloud.")) {
+            signOut();
+            toast.success("Signed out");
+          }
+        }}
+        className="w-full mt-4 rounded-full py-3 text-sm font-semibold flex items-center justify-center gap-2 text-destructive">
         <LogOut className="h-4 w-4" /> Log Out
       </button>
     </AppShell>
