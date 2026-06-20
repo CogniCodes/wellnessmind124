@@ -1,6 +1,6 @@
-import type { Mood } from "./store";
+export type Mood = string;
 
-export const MOODS: { name: Mood; emoji: string; tone: string }[] = [
+export const MOODS: { name: string; emoji: string; tone: string }[] = [
   { name: "Calm", emoji: "😌", tone: "var(--soft-mint)" },
   { name: "Happy", emoji: "😊", tone: "var(--soft-mint)" },
   { name: "Energetic", emoji: "😎", tone: "var(--soft-yellow)" },
