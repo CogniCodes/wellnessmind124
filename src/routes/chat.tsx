@@ -1,11 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, MoreHorizontal, Send, Smile } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { ArrowLeft, MoreHorizontal, Send, Smile, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { usePersistent } from "@/lib/store";
-import type { ChatMessage, MoodEntry, SymptomLog, Profile } from "@/lib/store";
-import { DEFAULT_PROFILE, SEED_MOODS, SEED_SYMPTOMS } from "@/lib/seed";
+import { useChat, useMoods, useSymptoms, insertChat } from "@/lib/db-hooks";
+import { useVisitorId } from "@/lib/visitor";
 import { sendChat } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/chat")({
@@ -13,18 +11,11 @@ export const Route = createFileRoute("/chat")({
   component: ChatPage,
 });
 
-const WELCOME: ChatMessage[] = [
-  { id: "w1", role: "assistant", at: "2025-01-01T09:30:00.000Z",
-    content: "I've analyzed your symptoms from today." },
-  { id: "w2", role: "assistant", at: "2025-01-01T09:30:00.000Z",
-    content: "It looks like you had a headache (intensity 4) and felt low energy. Here's what I suggest:\n• 💧 Drink enough water\n• 🌿 Take a short break and rest your eyes\n• 🌬️ Try 5 minutes of deep breathing\n• 💡 Avoid screens for some time" },
-];
-
 function ChatPage() {
-  const [messages, setMessages] = usePersistent<ChatMessage[]>("sm.chat", WELCOME);
-  const [moods] = usePersistent<MoodEntry[]>("sm.moods", SEED_MOODS);
-  const [symptoms] = usePersistent<SymptomLog[]>("sm.symptoms", SEED_SYMPTOMS);
-  const [profile] = usePersistent<Profile>("sm.profile", DEFAULT_PROFILE);
+  const visitorId = useVisitorId();
+  const { data: messages = [], isLoading } = useChat();
+  const { data: moods = [] } = useMoods();
+  const { data: symptoms = [] } = useSymptoms();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -33,33 +24,34 @@ function ChatPage() {
 
   const send = async () => {
     const text = input.trim();
-    if (!text) return;
-    const userMsg: ChatMessage = { id: crypto.randomUUID(), role: "user", content: text, at: new Date().toISOString() };
-    setMessages((p) => [...p, userMsg]);
+    if (!text || loading || !visitorId) return;
     setInput("");
     setLoading(true);
     try {
+      await insertChat(visitorId, "user", text);
+
       const isToday = (iso: string) => {
         const d = new Date(iso); const n = new Date();
         return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
       };
-      const sortedMoods = [...moods].sort((a, b) => +new Date(b.at) - +new Date(a.at));
-      const sortedSymptoms = [...symptoms].sort((a, b) => +new Date(b.at) - +new Date(a.at));
       const reply = await sendChat({ data: {
-        messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
+        messages: [
+          ...messages.map((m) => ({ role: m.role, content: m.message })),
+          { role: "user" as const, content: text },
+        ],
         context: {
-          currentMood: sortedMoods.find(m => isToday(m.at))?.mood,
-          recentMoods: sortedMoods.slice(0, 7).map(m => ({ mood: m.mood, at: m.at })),
-          recentSymptoms: sortedSymptoms.slice(0, 8).map(s => ({
-            name: s.name, severity: s.severity, category: s.category, at: s.at, notes: s.notes,
+          currentMood: moods.find((m) => isToday(m.created_at))?.mood,
+          recentMoods: moods.slice(0, 7).map((m) => ({ mood: m.mood, at: m.created_at })),
+          recentSymptoms: symptoms.slice(0, 8).map((s) => ({
+            name: s.symptom_name, severity: s.severity, at: s.created_at, notes: s.notes ?? undefined,
           })),
-          wellnessScore: profile.wellnessScore,
-          streak: profile.streak,
         },
-      } });
-      setMessages((p) => [...p, { id: crypto.randomUUID(), role: "assistant", content: reply.text, at: new Date().toISOString() }]);
-    } catch (e: any) {
-      setMessages((p) => [...p, { id: crypto.randomUUID(), role: "assistant", content: "I'm having trouble responding right now. Please try again in a moment. 💜", at: new Date().toISOString() }]);
+      }});
+      await insertChat(visitorId, "assistant", reply.text);
+    } catch (e) {
+      console.error(e);
+      await insertChat(visitorId, "assistant",
+        "I'm having trouble responding right now. Please try again in a moment. 💜");
     } finally {
       setLoading(false);
     }
@@ -84,8 +76,18 @@ function ChatPage() {
       </div>
 
       <div className="space-y-3 mb-6">
+        {isLoading && (
+          <div className="grid place-items-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+        )}
+        {!isLoading && messages.length === 0 && (
+          <div className="glass-card rounded-3xl p-5 text-center text-sm text-muted-foreground">
+            Hi 🌸 Tell me how you're feeling today, and I'll be here for you.
+          </div>
+        )}
         {messages.map((m) => (
-          <Bubble key={m.id} role={m.role} content={m.content} time={fmt(m.at)} />
+          <Bubble key={m.id} role={m.role} content={m.message} time={fmt(m.created_at)} />
         ))}
         {loading && (
           <div className="flex items-end gap-2">

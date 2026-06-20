@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "sonner";
+import { VisitorProvider } from "@/lib/visitor";
+import { WelcomeGate } from "@/components/welcome-gate";
 
 function NotFoundComponent() {
   return (
@@ -118,8 +120,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster position="top-center" toastOptions={{ style: { borderRadius: "16px" } }} />
+      <VisitorProvider>
+        <WelcomeGate>
+          <Outlet />
+        </WelcomeGate>
+        <Toaster position="top-center" toastOptions={{ style: { borderRadius: "16px" } }} />
+      </VisitorProvider>
     </QueryClientProvider>
   );
 }
