@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { HeartPulse, Plus, ChevronRight, Heart, Shield, Pill, FileText, Activity, Trash2, X } from "lucide-react";
+import { HeartPulse, Plus, ChevronRight, Heart, Shield, Pill, FileText, Activity, Trash2, X, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
-import { usePersistent } from "@/lib/store";
-import type { MedicalItem } from "@/lib/store";
-import { SEED_MEDICAL } from "@/lib/seed";
+import { useMedical, useSaveMedical, useDeleteMedical, type MedicalRow } from "@/lib/db-hooks";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/medical")({
   head: () => ({ meta: [{ title: "Past Medical History · SereneMind" }] }),
@@ -22,26 +21,16 @@ const SECTIONS: { key: SectionKey; title: string; icon: any; tint: string }[] = 
   { key: "notes", title: "Medical Notes", icon: FileText, tint: "var(--soft-sky)" },
 ];
 
-const ALLERGY_TINTS: Record<string, string> = {
-  Mild: "var(--success)", Moderate: "var(--warning)", Severe: "var(--destructive)",
-};
-
 function Medical() {
-  const [data, setData] = usePersistent<Record<string, MedicalItem[]>>("sm.medical", SEED_MEDICAL);
-  const [editing, setEditing] = useState<{ key: SectionKey; item?: MedicalItem } | null>(null);
+  const { data: items = [], isLoading } = useMedical();
+  const save = useSaveMedical();
+  const del = useDeleteMedical();
+  const [editing, setEditing] = useState<{ key: SectionKey; item?: MedicalRow } | null>(null);
 
-  const saveItem = (key: SectionKey, item: MedicalItem) => {
-    setData(prev => {
-      const list = prev[key] ?? [];
-      const exists = list.some(x => x.id === item.id);
-      return { ...prev, [key]: exists ? list.map(x => x.id === item.id ? item : x) : [...list, { ...item, id: item.id || crypto.randomUUID() }] };
-    });
-    setEditing(null);
-  };
-  const removeItem = (key: SectionKey, id: string) => {
-    setData(prev => ({ ...prev, [key]: (prev[key] ?? []).filter(x => x.id !== id) }));
-    setEditing(null);
-  };
+  const grouped = SECTIONS.reduce<Record<SectionKey, MedicalRow[]>>((acc, s) => {
+    acc[s.key] = items.filter((i) => i.category === s.key);
+    return acc;
+  }, { chronic: [], allergies: [], illnesses: [], medications: [], notes: [] });
 
   return (
     <AppShell>
@@ -56,56 +45,65 @@ function Medical() {
         }
       />
 
-      <div className="space-y-3">
-        {SECTIONS.map((s) => {
-          const items = data[s.key] ?? [];
-          return (
-            <div key={s.key} className="glass-card rounded-3xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="grid h-9 w-9 place-items-center rounded-2xl"
-                    style={{ background: `color-mix(in oklab, ${s.tint} 70%, transparent)` }}>
-                    <s.icon className="h-4 w-4" />
+      {isLoading ? (
+        <div className="grid place-items-center py-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+      ) : (
+        <div className="space-y-3">
+          {SECTIONS.map((s) => {
+            const list = grouped[s.key];
+            return (
+              <div key={s.key} className="glass-card rounded-3xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-9 w-9 place-items-center rounded-2xl"
+                      style={{ background: `color-mix(in oklab, ${s.tint} 70%, transparent)` }}>
+                      <s.icon className="h-4 w-4" />
+                    </div>
+                    <p className="font-display font-bold">{s.title}</p>
                   </div>
-                  <p className="font-display font-bold">{s.title}</p>
+                  <button onClick={() => setEditing({ key: s.key })}
+                    className="text-primary text-xs font-medium">+ Add</button>
                 </div>
-                <button onClick={() => setEditing({ key: s.key })} className="text-primary text-xs font-medium">+ Add</button>
+                {list.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No items added yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {list.map((item) => (
+                      <button key={item.id} onClick={() => setEditing({ key: s.key, item })}
+                        className="w-full flex items-center justify-between py-1.5 text-left">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{item.title}</p>
+                          {item.description && <p className="text-xs text-muted-foreground truncate">{item.description}</p>}
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              {items.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No items added yet</p>
-              ) : (
-                <div className="space-y-2">
-                  {items.map((item) => (
-                    <button key={item.id} onClick={() => setEditing({ key: s.key, item })}
-                      className="w-full flex items-center justify-between py-1.5 text-left">
-                      <div>
-                        <p className="text-sm font-medium">{item.title}</p>
-                        <p className="text-xs text-muted-foreground">{item.detail}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {item.tag && (
-                          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
-                            style={{ background: `color-mix(in oklab, ${ALLERGY_TINTS[item.tag] ?? "var(--muted)"} 40%, transparent)` }}>
-                            {item.tag}
-                          </span>
-                        )}
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {editing && (
         <Editor
           section={editing.key}
           item={editing.item}
-          onSave={(it) => saveItem(editing.key, it)}
-          onDelete={editing.item ? () => removeItem(editing.key, editing.item!.id) : undefined}
+          saving={save.isPending}
+          onSave={async (it) => {
+            await save.mutateAsync({
+              id: editing.item?.id, category: editing.key,
+              title: it.title, description: it.description || null,
+            });
+            setEditing(null);
+            toast.success("Saved");
+          }}
+          onDelete={editing.item ? async () => {
+            await del.mutateAsync(editing.item!.id);
+            setEditing(null);
+            toast.success("Removed");
+          } : undefined}
           onClose={() => setEditing(null)}
         />
       )}
@@ -113,38 +111,27 @@ function Medical() {
   );
 }
 
-function Editor({ section, item, onSave, onDelete, onClose }: {
+function Editor({ section, item, saving, onSave, onDelete, onClose }: {
   section: SectionKey;
-  item?: MedicalItem;
-  onSave: (i: MedicalItem) => void;
+  item?: MedicalRow;
+  saving: boolean;
+  onSave: (i: { title: string; description: string }) => void;
   onDelete?: () => void;
   onClose: () => void;
 }) {
   const [title, setTitle] = useState(item?.title ?? "");
-  const [detail, setDetail] = useState(item?.detail ?? "");
-  const [tag, setTag] = useState(item?.tag ?? "");
+  const [description, setDescription] = useState(item?.description ?? "");
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" onClick={onClose}>
       <div className="glass-card rounded-3xl p-5 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-display font-bold">{item ? "Edit" : "Add"} {SECTIONS.find(s => s.key === section)?.title}</h3>
+          <h3 className="font-display font-bold">{item ? "Edit" : "Add"} {SECTIONS.find((s) => s.key === section)?.title}</h3>
           <button onClick={onClose}><X className="h-4 w-4" /></button>
         </div>
         <div className="space-y-3">
           <Field label="Title" value={title} onChange={setTitle} />
-          <Field label="Detail" value={detail} onChange={setDetail} />
-          {section === "allergies" && (
-            <div className="flex gap-2">
-              {["Mild", "Moderate", "Severe"].map(t => (
-                <button key={t} onClick={() => setTag(t)}
-                  className="rounded-full px-3 py-1.5 text-xs font-medium"
-                  style={{ background: tag === t ? `color-mix(in oklab, ${ALLERGY_TINTS[t]} 50%, transparent)` : "var(--muted)" }}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          )}
+          <Field label="Detail" value={description} onChange={setDescription} />
         </div>
         <div className="flex gap-2 mt-5">
           {onDelete && (
@@ -152,8 +139,12 @@ function Editor({ section, item, onSave, onDelete, onClose }: {
               <Trash2 className="h-4 w-4" />
             </button>
           )}
-          <button onClick={() => onSave({ id: item?.id ?? "", title, detail, tag: tag || undefined })}
-            className="flex-1 rounded-full py-3 text-white font-semibold" style={{ background: "var(--primary)" }}>Save</button>
+          <button onClick={() => onSave({ title, description })}
+            disabled={saving || !title.trim()}
+            className="flex-1 rounded-full py-3 text-white font-semibold disabled:opacity-50"
+            style={{ background: "var(--primary)" }}>
+            {saving ? "Saving..." : "Save"}
+          </button>
         </div>
       </div>
     </div>
