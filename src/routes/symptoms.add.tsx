@@ -2,9 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, Search, Mic } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { usePersistent } from "@/lib/store";
-import type { SymptomCategory, SymptomLog, Mood } from "@/lib/store";
-import { SEED_SYMPTOMS } from "@/lib/seed";
+import { useAddSymptom } from "@/lib/db-hooks";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/symptoms/add")({
@@ -12,7 +10,9 @@ export const Route = createFileRoute("/symptoms/add")({
   component: AddSymptoms,
 });
 
-const CATEGORIES: { key: SymptomCategory; emoji: string; tint: string }[] = [
+type CategoryKey = "Physical" | "Emotional" | "Sleep" | "Pain" | "Digestion";
+
+const CATEGORIES: { key: CategoryKey; emoji: string; tint: string }[] = [
   { key: "Physical", emoji: "🧍", tint: "var(--soft-pink)" },
   { key: "Emotional", emoji: "💜", tint: "var(--lavender)" },
   { key: "Sleep", emoji: "🌙", tint: "var(--soft-sky)" },
@@ -20,7 +20,7 @@ const CATEGORIES: { key: SymptomCategory; emoji: string; tint: string }[] = [
   { key: "Digestion", emoji: "🌿", tint: "var(--soft-mint)" },
 ];
 
-const SYMPTOMS: Record<SymptomCategory, { name: string; emoji: string; tint: string }[]> = {
+const SYMPTOMS: Record<CategoryKey, { name: string; emoji: string; tint: string }[]> = {
   Physical: [
     { name: "Headache", emoji: "🧠", tint: "var(--soft-pink)" },
     { name: "Fever", emoji: "🌡️", tint: "var(--soft-sky)" },
@@ -60,29 +60,26 @@ const SYMPTOMS: Record<SymptomCategory, { name: string; emoji: string; tint: str
 
 function AddSymptoms() {
   const router = useRouter();
-  const [, setLogs] = usePersistent<SymptomLog[]>("sm.symptoms", SEED_SYMPTOMS);
-  const [category, setCategory] = useState<SymptomCategory>("Physical");
+  const add = useAddSymptom();
+  const [category, setCategory] = useState<CategoryKey>("Physical");
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<string | null>("Headache");
-  const [severity, setSeverity] = useState(4);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [severity, setSeverity] = useState(3);
   const [notes, setNotes] = useState("");
 
   const list = SYMPTOMS[category].filter((s) => s.name.toLowerCase().includes(search.toLowerCase()));
   const selectedDef = Object.values(SYMPTOMS).flat().find((s) => s.name === selected);
 
-  const save = () => {
+  const save = async () => {
     if (!selected) return;
-    setLogs((prev) => [{
-      id: crypto.randomUUID(),
-      name: selected,
-      category,
-      severity,
-      notes,
-      at: new Date().toISOString(),
-      status: "Ongoing",
-    }, ...prev]);
-    toast.success("Symptom logged ✨");
-    router.navigate({ to: "/" });
+    try {
+      await add.mutateAsync({ symptom_name: selected, severity, notes: notes || null });
+      toast.success("Symptom logged ✨");
+      router.navigate({ to: "/" });
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not save. Try again.");
+    }
   };
 
   return (
@@ -169,7 +166,7 @@ function AddSymptoms() {
           <input
             type="range" min={1} max={5} value={severity}
             onChange={(e) => setSeverity(Number(e.target.value))}
-            className="w-full accent-secondary"
+            className="w-full"
             style={{ accentColor: "var(--secondary)" }}
           />
           <div className="flex justify-between mt-2 text-xs font-semibold">
@@ -198,11 +195,11 @@ function AddSymptoms() {
 
       <button
         onClick={save}
-        disabled={!selected}
+        disabled={!selected || add.isPending}
         className="w-full rounded-full py-4 font-display font-semibold text-white soft-shadow disabled:opacity-50"
         style={{ background: "linear-gradient(90deg, var(--secondary), oklch(0.75 0.16 350))" }}
       >
-        Done
+        {add.isPending ? "Saving..." : "Done"}
       </button>
     </AppShell>
   );
