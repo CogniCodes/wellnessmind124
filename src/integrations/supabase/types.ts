@@ -14,7 +14,242 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          role: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          role: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          role?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      community_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          post_id: string
+          visitor_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          post_id: string
+          visitor_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_posts: {
+        Row: {
+          anonymous_name: string
+          content: string
+          created_at: string
+          id: string
+          likes_count: number
+          tags: string[]
+          visitor_id: string
+        }
+        Insert: {
+          anonymous_name?: string
+          content: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          tags?: string[]
+          visitor_id: string
+        }
+        Update: {
+          anonymous_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          tags?: string[]
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      games_progress: {
+        Row: {
+          completion_time: number | null
+          created_at: string
+          game_name: string
+          id: string
+          score: number
+          visitor_id: string
+        }
+        Insert: {
+          completion_time?: number | null
+          created_at?: string
+          game_name: string
+          id?: string
+          score?: number
+          visitor_id: string
+        }
+        Update: {
+          completion_time?: number | null
+          created_at?: string
+          game_name?: string
+          id?: string
+          score?: number
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      medical_history: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          visitor_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          visitor_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      mood_entries: {
+        Row: {
+          created_at: string
+          id: string
+          mood: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mood: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mood?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      support_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phone_number: string | null
+          relationship: string | null
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phone_number?: string | null
+          relationship?: string | null
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phone_number?: string | null
+          relationship?: string | null
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      symptom_logs: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          severity: number
+          symptom_name: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          severity?: number
+          symptom_name: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          severity?: number
+          symptom_name?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      visitor_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
