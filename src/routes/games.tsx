@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Gamepad2, Wind, Brain, Palette, Timer } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Gamepad2, Wind, Brain, Palette, Timer, Trophy } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
+import { useGameStats, useSaveGameRun } from "@/lib/db-hooks";
 
 export const Route = createFileRoute("/games")({
   head: () => ({ meta: [{ title: "Wellness Games · SereneMind" }] }),
