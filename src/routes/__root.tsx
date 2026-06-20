@@ -120,8 +120,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster position="top-center" toastOptions={{ style: { borderRadius: "16px" } }} />
+      <VisitorProvider>
+        <WelcomeGate>
+          <Outlet />
+        </WelcomeGate>
+        <Toaster position="top-center" toastOptions={{ style: { borderRadius: "16px" } }} />
+      </VisitorProvider>
     </QueryClientProvider>
   );
 }
