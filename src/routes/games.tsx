@@ -91,7 +91,15 @@ function Memory() {
   const [lock, setLock] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const won = cards.every(c => c.done);
+  const won = cards.every((c) => c.done);
+  const savedRef = useRef(false);
+  const { data: history = [] } = useGameStats("memory_match");
+  const saveRun = useSaveGameRun();
+  const best = history.reduce<{ moves: number; time: number } | null>((acc, r) => {
+    const m = r.score, t = r.completion_time ?? Infinity;
+    if (!acc || m < acc.moves || (m === acc.moves && t < acc.time)) return { moves: m, time: t };
+    return acc;
+  }, null);
 
   useEffect(() => {
     if (won || startedAt === null) return;
@@ -99,46 +107,45 @@ function Memory() {
     return () => clearInterval(id);
   }, [won, startedAt]);
 
+  useEffect(() => {
+    if (won && !savedRef.current) {
+      savedRef.current = true;
+      saveRun.mutate({ game_name: "memory_match", score: moves, completion_time: elapsed });
+    }
+  }, [won, moves, elapsed, saveRun]);
+
   const reset = () => {
-    setCards(buildDeck());
-    setPicked([]);
-    setMoves(0);
-    setLock(false);
-    setStartedAt(null);
-    setElapsed(0);
+    setCards(buildDeck()); setPicked([]); setMoves(0); setLock(false);
+    setStartedAt(null); setElapsed(0); savedRef.current = false;
   };
 
   const open = (id: number) => {
     if (lock || won) return;
-    const card = cards.find(c => c.id === id);
+    const card = cards.find((c) => c.id === id);
     if (!card || card.open || card.done) return;
     if (picked.includes(id)) return;
-
     if (startedAt === null) setStartedAt(Date.now());
 
-    const nextCards = cards.map(c => c.id === id ? { ...c, open: true } : c);
+    const nextCards = cards.map((c) => (c.id === id ? { ...c, open: true } : c));
     const nextPicked = [...picked, id];
     setCards(nextCards);
     setPicked(nextPicked);
 
     if (nextPicked.length === 2) {
       setLock(true);
-      setMoves(m => m + 1);
+      setMoves((m) => m + 1);
       const [aId, bId] = nextPicked;
-      const a = nextCards.find(c => c.id === aId)!;
-      const b = nextCards.find(c => c.id === bId)!;
+      const a = nextCards.find((c) => c.id === aId)!;
+      const b = nextCards.find((c) => c.id === bId)!;
       const match = a.emoji === b.emoji;
       setTimeout(() => {
-        setCards(prev => prev.map(c => {
+        setCards((prev) => prev.map((c) => {
           if (c.id === aId || c.id === bId) {
-            return match
-              ? { ...c, done: true, open: true }
-              : { ...c, open: false };
+            return match ? { ...c, done: true, open: true } : { ...c, open: false };
           }
           return c;
         }));
-        setPicked([]);
-        setLock(false);
+        setPicked([]); setLock(false);
       }, match ? 450 : 800);
     }
   };
@@ -153,8 +160,16 @@ function Memory() {
         <span className="font-medium tabular-nums" suppressHydrationWarning>⏱ {mm}:{ss}</span>
         <button onClick={reset} className="text-xs text-primary font-medium">Reset</button>
       </div>
+      {best && (
+        <div className="mb-3 rounded-2xl px-3 py-2 text-xs flex items-center gap-2"
+          style={{ background: "color-mix(in oklab, var(--soft-yellow) 60%, var(--card))" }}>
+          <Trophy className="h-3.5 w-3.5" />
+          Personal best: <span className="font-bold">{best.moves} moves</span>
+          {Number.isFinite(best.time) && <span>· {String(Math.floor(best.time / 60)).padStart(2, "0")}:{String(best.time % 60).padStart(2, "0")}</span>}
+        </div>
+      )}
       <div className="grid grid-cols-4 gap-2">
-        {cards.map(c => {
+        {cards.map((c) => {
           const shown = c.open || c.done;
           return (
             <button
