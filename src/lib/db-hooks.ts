@@ -128,7 +128,6 @@ export function useAddSymptom() {
 export function useChat() {
   const visitorId = useVisitorId();
   const key = ["chat", visitorId];
-  useRealtimeFor("ai_chat_messages", key);
   return useQuery({
     queryKey: key,
     enabled: !!visitorId,
@@ -155,7 +154,6 @@ export async function insertChat(visitorId: string, role: "user" | "assistant", 
 export function useContacts() {
   const visitorId = useVisitorId();
   const key = ["contacts", visitorId];
-  useRealtimeFor("support_contacts", key);
   return useQuery({
     queryKey: key,
     enabled: !!visitorId,
@@ -243,10 +241,7 @@ export function useLikePost() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (post: PostRow) => {
-      const { error } = await supabase
-        .from("community_posts")
-        .update({ likes_count: post.likes_count + 1 })
-        .eq("id", post.id);
+      const { error } = await supabase.rpc("increment_post_likes", { _post_id: post.id });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["posts"] }),
