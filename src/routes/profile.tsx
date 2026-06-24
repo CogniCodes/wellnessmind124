@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { User, LogOut, Moon, Sun, Bell, Lock, Sparkles } from "lucide-react";
+import { User, LogOut, Moon, Sun, Bell, Lock, Sparkles, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
@@ -63,7 +63,7 @@ function Profile() {
           🐻
         </div>
         <h2 className="font-display text-xl font-bold mt-3">{visitor?.name ?? "—"}</h2>
-        <p className="text-xs text-muted-foreground">Your safe space ✨</p>
+        <UserIdBadge userId={visitor?.userId ?? ""} />
         <div className="grid grid-cols-2 gap-3 mt-5">
           <div className="rounded-2xl p-3" style={{ background: "color-mix(in oklab, var(--soft-pink) 50%, transparent)" }}>
             <p className="text-xs text-muted-foreground">Streak</p>
@@ -75,7 +75,7 @@ function Profile() {
           </div>
         </div>
         <label className="block mt-4 text-left">
-          <span className="text-xs text-muted-foreground">Name</span>
+          <span className="text-xs text-muted-foreground">Display name</span>
           <input value={name} onChange={(e) => setName(e.target.value)} onBlur={saveName}
             className="w-full mt-1 rounded-2xl bg-muted/40 px-3 py-2.5 text-sm outline-none" />
         </label>
@@ -98,7 +98,7 @@ function Profile() {
 
       <button
         onClick={() => {
-          if (confirm("Sign out and forget this device? Your saved data stays in the cloud.")) {
+          if (confirm("Sign out of this device? Save your User ID first — you'll need it to sign back in.")) {
             signOut();
             toast.success("Signed out");
           }
@@ -117,5 +117,31 @@ function Row({ icon, label, right }: { icon: React.ReactNode; label: string; rig
       <span className="flex-1 text-sm font-medium">{label}</span>
       {right}
     </div>
+  );
+}
+
+function UserIdBadge({ userId }: { userId: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    if (!userId) return;
+    try {
+      await navigator.clipboard.writeText(userId);
+      setCopied(true);
+      toast.success("User ID copied");
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("Could not copy");
+    }
+  };
+  return (
+    <button
+      onClick={copy}
+      className="mt-2 inline-flex items-center gap-2 rounded-full bg-muted/40 px-3 py-1.5 text-xs font-semibold tracking-widest hover:bg-muted/60"
+      title="Copy your User ID"
+    >
+      <span className="text-muted-foreground font-normal">ID</span>
+      <span>{userId || "—"}</span>
+      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+    </button>
   );
 }
