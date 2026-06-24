@@ -255,7 +255,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_post_likes: { Args: { _post_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
