@@ -20,21 +20,21 @@ export type Database = {
           id: string
           message: string
           role: string
-          visitor_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           message: string
           role: string
-          visitor_id: string
+          user_id: string
         }
         Update: {
           created_at?: string
           id?: string
           message?: string
           role?: string
-          visitor_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -44,21 +44,21 @@ export type Database = {
           created_at: string
           id: string
           post_id: string
-          visitor_id: string
+          user_id: string
         }
         Insert: {
           comment: string
           created_at?: string
           id?: string
           post_id: string
-          visitor_id: string
+          user_id: string
         }
         Update: {
           comment?: string
           created_at?: string
           id?: string
           post_id?: string
-          visitor_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -78,7 +78,7 @@ export type Database = {
           id: string
           likes_count: number
           tags: string[]
-          visitor_id: string
+          user_id: string
         }
         Insert: {
           anonymous_name?: string
@@ -87,7 +87,7 @@ export type Database = {
           id?: string
           likes_count?: number
           tags?: string[]
-          visitor_id: string
+          user_id: string
         }
         Update: {
           anonymous_name?: string
@@ -96,7 +96,7 @@ export type Database = {
           id?: string
           likes_count?: number
           tags?: string[]
-          visitor_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -107,7 +107,7 @@ export type Database = {
           game_name: string
           id: string
           score: number
-          visitor_id: string
+          user_id: string
         }
         Insert: {
           completion_time?: number | null
@@ -115,7 +115,7 @@ export type Database = {
           game_name: string
           id?: string
           score?: number
-          visitor_id: string
+          user_id: string
         }
         Update: {
           completion_time?: number | null
@@ -123,7 +123,7 @@ export type Database = {
           game_name?: string
           id?: string
           score?: number
-          visitor_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -134,7 +134,7 @@ export type Database = {
           description: string | null
           id: string
           title: string
-          visitor_id: string
+          user_id: string
         }
         Insert: {
           category: string
@@ -142,7 +142,7 @@ export type Database = {
           description?: string | null
           id?: string
           title: string
-          visitor_id: string
+          user_id: string
         }
         Update: {
           category?: string
@@ -150,7 +150,7 @@ export type Database = {
           description?: string | null
           id?: string
           title?: string
-          visitor_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -159,19 +159,19 @@ export type Database = {
           created_at: string
           id: string
           mood: string
-          visitor_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           mood: string
-          visitor_id: string
+          user_id: string
         }
         Update: {
           created_at?: string
           id?: string
           mood?: string
-          visitor_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -182,7 +182,7 @@ export type Database = {
           name: string
           phone_number: string | null
           relationship: string | null
-          visitor_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -190,7 +190,7 @@ export type Database = {
           name: string
           phone_number?: string | null
           relationship?: string | null
-          visitor_id: string
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -198,7 +198,7 @@ export type Database = {
           name?: string
           phone_number?: string | null
           relationship?: string | null
-          visitor_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -209,7 +209,7 @@ export type Database = {
           notes: string | null
           severity: number
           symptom_name: string
-          visitor_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string
@@ -217,7 +217,7 @@ export type Database = {
           notes?: string | null
           severity?: number
           symptom_name: string
-          visitor_id: string
+          user_id: string
         }
         Update: {
           created_at?: string
@@ -225,28 +225,28 @@ export type Database = {
           notes?: string | null
           severity?: number
           symptom_name?: string
-          visitor_id?: string
+          user_id?: string
         }
         Relationships: []
       }
-      visitor_profiles: {
+      user_profiles: {
         Row: {
           created_at: string
           id: string
           name: string
-          visitor_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
-          visitor_id: string
+          user_id: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
-          visitor_id?: string
+          user_id?: string
         }
         Relationships: []
       }
