@@ -153,7 +153,13 @@ function Dashboard() {
             <div className="h-32">
               <ResponsiveContainer>
                 <LineChart data={trendData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                  <Line type="monotone" dataKey="score" stroke="var(--secondary)" strokeWidth={3} dot={{ r: 3, fill: "var(--secondary)" }} />
+                  <XAxis dataKey="label" hide />
+                  <YAxis domain={[0, 5]} hide />
+                  <Tooltip
+                    cursor={{ stroke: "var(--secondary)", strokeOpacity: 0.3 }}
+                    content={<MoodTooltip />}
+                  />
+                  <Line type="monotone" dataKey="score" stroke="var(--secondary)" strokeWidth={3} dot={{ r: 3, fill: "var(--secondary)" }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -191,7 +197,13 @@ function Dashboard() {
                     <stop offset="100%" stopColor="var(--success)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <Area type="monotone" dataKey="w" stroke="var(--success)" strokeWidth={2} fill="url(#wg)" />
+                <XAxis dataKey="label" hide />
+                <YAxis domain={[0, 100]} hide />
+                <Tooltip
+                  cursor={{ stroke: "var(--success)", strokeOpacity: 0.3 }}
+                  content={<WellnessTooltip />}
+                />
+                <Area type="monotone" dataKey="w" stroke="var(--success)" strokeWidth={2} fill="url(#wg)" activeDot={{ r: 5 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
