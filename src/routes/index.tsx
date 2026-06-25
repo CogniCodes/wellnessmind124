@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Bell, Plus, Flame, HeartPulse, ChevronRight, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MOODS, moodEmoji } from "@/lib/moods";
 import { useVisitor, greetingFor } from "@/lib/visitor";
 import { useMoods, useSetTodayMood, useSymptoms, type MoodRow, type SymptomRow } from "@/lib/db-hooks";
+import { NotificationsDrawer, useUnreadNotifCount } from "@/components/notifications-drawer";
 import {
-  Area, AreaChart, Line, LineChart, ResponsiveContainer,
+  Area, AreaChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
 export const Route = createFileRoute("/")({
@@ -24,6 +26,8 @@ function Dashboard() {
   const { data: moods = [], isLoading: moodsLoading } = useMoods();
   const { data: symptoms = [] } = useSymptoms();
   const setMood = useSetTodayMood();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const unread = useUnreadNotifCount();
 
   const name = visitor?.name ?? "friend";
   const greeting = greetingFor();
@@ -53,11 +57,21 @@ function Dashboard() {
           </h1>
           <p className="text-sm text-muted-foreground">Let's take care of you today 🌿</p>
         </div>
-        <button className="grid h-11 w-11 place-items-center rounded-full glass-card relative">
+        <button
+          onClick={() => setNotifOpen(true)}
+          className="grid h-11 w-11 place-items-center rounded-full glass-card relative"
+          aria-label="Notifications"
+        >
           <Bell className="h-5 w-5" />
-          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-secondary" />
+          {unread > 0 && (
+            <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-secondary text-[10px] font-bold text-white grid place-items-center">
+              {unread}
+            </span>
+          )}
         </button>
       </motion.div>
+
+      <NotificationsDrawer open={notifOpen} onOpenChange={setNotifOpen} />
 
       {/* Mood selector */}
       <motion.section
