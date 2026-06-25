@@ -24,6 +24,17 @@ const history = [
 
 export function DesktopSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { signOut, visitor } = useVisitor();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    if (!visitor) return;
+    if (confirm("Sign out of this device? Save your User ID first — you'll need it to sign back in.")) {
+      signOut();
+      toast.success("Signed out");
+      router.navigate({ to: "/" });
+    }
+  };
 
   return (
     <aside className="hidden md:flex w-72 shrink-0 flex-col gap-4 p-4 sticky top-0 h-screen">
@@ -58,7 +69,10 @@ export function DesktopSidebar() {
         </div>
       </nav>
 
-      <button className="flex items-center gap-3 px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <button
+        onClick={handleLogout}
+        className="flex items-center gap-3 px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
         <LogOut className="h-4 w-4" /> Log Out
       </button>
     </aside>
