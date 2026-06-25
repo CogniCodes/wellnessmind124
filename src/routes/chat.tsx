@@ -19,8 +19,69 @@ function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const autoTriggeredRef = useRef(false);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
+
+  const isToday = (iso: string) => {
+    const d = new Date(iso); const n = new Date();
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  };
+
+  // Auto-start an AI conversation when the user opens chat after logging a symptom.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (autoTriggeredRef.current) return;
+    if (isLoading || !visitorId || loading) return;
+    const pendingId = localStorage.getItem("sm.pendingSymptomChat");
+    if (!pendingId) return;
+    const sym = symptoms.find((s) => s.id === pendingId);
+    if (!sym) return; // wait until symptoms load or skip if stale
+    autoTriggeredRef.current = true;
+    localStorage.removeItem("sm.pendingSymptomChat");
+
+    const firstOccurrence = symptoms
+      .filter((s) => s.symptom_name === sym.symptom_name)
+      .reduce<Date | null>((acc, s) => {
+        const d = new Date(s.created_at);
+        return !acc || d < acc ? d : acc;
+      }, null);
+    const durationDays = firstOccurrence
+      ? Math.max(1, Math.ceil((Date.now() - firstOccurrence.getTime()) / (24 * 60 * 60 * 1000)))
+      : 1;
+
+    (async () => {
+      setLoading(true);
+      try {
+        const reply = await sendChat({ data: {
+          messages: [
+            ...messages.map((m) => ({ role: m.role, content: m.message })),
+            { role: "user" as const, content: `[auto] I just logged a new symptom: ${sym.symptom_name} (severity ${sym.severity}/5). Please analyze it for me.` },
+          ],
+          context: {
+            currentMood: moods.find((m) => isToday(m.created_at))?.mood,
+            recentMoods: moods.slice(0, 7).map((m) => ({ mood: m.mood, at: m.created_at })),
+            recentSymptoms: symptoms.slice(0, 8).map((s) => ({
+              name: s.symptom_name, severity: s.severity, at: s.created_at, notes: s.notes ?? undefined,
+            })),
+            autoSymptomFocus: {
+              name: sym.symptom_name,
+              severity: sym.severity,
+              at: sym.created_at,
+              notes: sym.notes,
+              durationDays,
+            },
+          },
+        }});
+        await insertChat(visitorId, "assistant", reply.text);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, visitorId, symptoms.length]);
 
   const send = async () => {
     const text = input.trim();
@@ -30,10 +91,6 @@ function ChatPage() {
     try {
       await insertChat(visitorId, "user", text);
 
-      const isToday = (iso: string) => {
-        const d = new Date(iso); const n = new Date();
-        return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
-      };
       const reply = await sendChat({ data: {
         messages: [
           ...messages.map((m) => ({ role: m.role, content: m.message })),
