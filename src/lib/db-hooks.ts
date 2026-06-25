@@ -109,13 +109,14 @@ export function useAddSymptom() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { symptom_name: string; severity: number; notes?: string | null }) => {
-      const { error } = await supabase.from("symptom_logs").insert({
+      const { data, error } = await supabase.from("symptom_logs").insert({
         user_id: userId,
         symptom_name: input.symptom_name,
         severity: input.severity,
         notes: input.notes ?? null,
-      });
+      }).select("id").single();
       if (error) throw error;
+      return data as { id: string };
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["symptoms", userId] }),
   });

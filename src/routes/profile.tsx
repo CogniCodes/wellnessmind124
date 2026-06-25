@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { User, LogOut, Moon, Sun, Bell, Lock, Sparkles, Copy, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
+import { NotificationsDrawer } from "@/components/notifications-drawer";
 import { useVisitor } from "@/lib/visitor";
 import { useMoods, useSymptoms } from "@/lib/db-hooks";
 import { toast } from "sonner";
@@ -13,11 +14,13 @@ export const Route = createFileRoute("/profile")({
 });
 
 function Profile() {
+  const router = useRouter();
   const { visitor, updateName, signOut } = useVisitor();
   const { data: moods = [] } = useMoods();
   const { data: symptoms = [] } = useSymptoms();
   const [dark, setDark] = useState(false);
   const [name, setName] = useState(visitor?.name ?? "");
+  const [notifOpen, setNotifOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark);
@@ -82,7 +85,9 @@ function Profile() {
       </div>
 
       <div className="glass-card rounded-3xl p-2">
-        <Row icon={<Bell className="h-4 w-4" />} label="Notifications" />
+        <button onClick={() => setNotifOpen(true)} className="w-full text-left">
+          <Row icon={<Bell className="h-4 w-4" />} label="Notifications" />
+        </button>
         <Row icon={dark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />} label="Dark mode"
           right={
             <button onClick={() => setDark((d) => !d)}
@@ -101,11 +106,14 @@ function Profile() {
           if (confirm("Sign out of this device? Save your User ID first — you'll need it to sign back in.")) {
             signOut();
             toast.success("Signed out");
+            router.navigate({ to: "/" });
           }
         }}
         className="w-full mt-4 rounded-full py-3 text-sm font-semibold flex items-center justify-center gap-2 text-destructive">
         <LogOut className="h-4 w-4" /> Log Out
       </button>
+
+      <NotificationsDrawer open={notifOpen} onOpenChange={setNotifOpen} />
     </AppShell>
   );
 }

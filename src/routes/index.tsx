@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { Bell, Plus, Flame, HeartPulse, ChevronRight, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MOODS, moodEmoji } from "@/lib/moods";
 import { useVisitor, greetingFor } from "@/lib/visitor";
 import { useMoods, useSetTodayMood, useSymptoms, type MoodRow, type SymptomRow } from "@/lib/db-hooks";
+import { NotificationsDrawer, useUnreadNotifCount } from "@/components/notifications-drawer";
 import {
-  Area, AreaChart, Line, LineChart, ResponsiveContainer,
+  Area, AreaChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
 export const Route = createFileRoute("/")({
@@ -24,6 +26,8 @@ function Dashboard() {
   const { data: moods = [], isLoading: moodsLoading } = useMoods();
   const { data: symptoms = [] } = useSymptoms();
   const setMood = useSetTodayMood();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const unread = useUnreadNotifCount();
 
   const name = visitor?.name ?? "friend";
   const greeting = greetingFor();
@@ -53,11 +57,21 @@ function Dashboard() {
           </h1>
           <p className="text-sm text-muted-foreground">Let's take care of you today 🌿</p>
         </div>
-        <button className="grid h-11 w-11 place-items-center rounded-full glass-card relative">
+        <button
+          onClick={() => setNotifOpen(true)}
+          className="grid h-11 w-11 place-items-center rounded-full glass-card relative"
+          aria-label="Notifications"
+        >
           <Bell className="h-5 w-5" />
-          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-secondary" />
+          {unread > 0 && (
+            <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-secondary text-[10px] font-bold text-white grid place-items-center">
+              {unread}
+            </span>
+          )}
         </button>
       </motion.div>
+
+      <NotificationsDrawer open={notifOpen} onOpenChange={setNotifOpen} />
 
       {/* Mood selector */}
       <motion.section
@@ -139,7 +153,13 @@ function Dashboard() {
             <div className="h-32">
               <ResponsiveContainer>
                 <LineChart data={trendData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                  <Line type="monotone" dataKey="score" stroke="var(--secondary)" strokeWidth={3} dot={{ r: 3, fill: "var(--secondary)" }} />
+                  <XAxis dataKey="label" hide />
+                  <YAxis domain={[0, 5]} hide />
+                  <Tooltip
+                    cursor={{ stroke: "var(--secondary)", strokeOpacity: 0.3 }}
+                    content={<MoodTooltip />}
+                  />
+                  <Line type="monotone" dataKey="score" stroke="var(--secondary)" strokeWidth={3} dot={{ r: 3, fill: "var(--secondary)" }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -177,7 +197,13 @@ function Dashboard() {
                     <stop offset="100%" stopColor="var(--success)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <Area type="monotone" dataKey="w" stroke="var(--success)" strokeWidth={2} fill="url(#wg)" />
+                <XAxis dataKey="label" hide />
+                <YAxis domain={[0, 100]} hide />
+                <Tooltip
+                  cursor={{ stroke: "var(--success)", strokeOpacity: 0.3 }}
+                  content={<WellnessTooltip />}
+                />
+                <Area type="monotone" dataKey="w" stroke="var(--success)" strokeWidth={2} fill="url(#wg)" activeDot={{ r: 5 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -261,7 +287,7 @@ function sameDay(a: Date, b: Date) {
 }
 
 function lastNDaysMoodScore(moods: MoodRow[], n: number) {
-  const out: { label: string; score: number; mood?: string }[] = [];
+  const out: { label: string; date: string; score: number; mood?: string }[] = [];
   const today = new Date();
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date(today);
@@ -270,9 +296,39 @@ function lastNDaysMoodScore(moods: MoodRow[], n: number) {
     const score = dayMoods.length
       ? dayMoods.reduce((s, m) => s + (MOOD_SCORE[m.mood] ?? 3), 0) / dayMoods.length
       : 0;
-    out.push({ label: DAY_LABELS[d.getDay()], score: Number(score.toFixed(1)), mood: dayMoods[0]?.mood });
+    out.push({
+      label: DAY_LABELS[d.getDay()],
+      date: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      score: Number(score.toFixed(1)),
+      mood: dayMoods[0]?.mood,
+    });
   }
   return out;
+}
+
+function MoodTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { date: string; score: number; mood?: string } }> }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  return (
+    <div className="glass-card rounded-2xl px-3 py-2 text-xs soft-shadow">
+      <p className="font-semibold">{d.date}</p>
+      <p className="text-muted-foreground">
+        {d.mood ? <>{moodEmoji(d.mood)} {d.mood} · {d.score}/5</> : "No mood logged"}
+      </p>
+    </div>
+  );
+}
+
+function WellnessTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { date: string; w: number } }> }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  const label = d.w >= 75 ? "Thriving" : d.w >= 55 ? "Steady" : d.w >= 35 ? "Building" : "Tender";
+  return (
+    <div className="glass-card rounded-2xl px-3 py-2 text-xs soft-shadow">
+      <p className="font-semibold">{d.date}</p>
+      <p className="text-muted-foreground">Wellness {d.w}/100 · {label}</p>
+    </div>
+  );
 }
 
 function topSymptoms(logs: SymptomRow[]) {

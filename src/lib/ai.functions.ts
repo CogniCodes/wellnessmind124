@@ -15,13 +15,20 @@ const ContextSchema = z.object({
   })).optional(),
   wellnessScore: z.number().optional(),
   streak: z.number().optional(),
+  autoSymptomFocus: z.object({
+    name: z.string(),
+    severity: z.number(),
+    at: z.string(),
+    notes: z.string().nullable().optional(),
+    durationDays: z.number().optional(),
+  }).optional(),
 }).optional();
 
 const MsgSchema = z.object({
   messages: z.array(z.object({
     role: z.enum(["user", "assistant", "system"]),
     content: z.string(),
-  })).min(1).max(50),
+  })).max(50),
   context: ContextSchema,
 });
 
@@ -61,6 +68,12 @@ function formatContext(ctx: z.infer<typeof ContextSchema>): string | null {
   }
   if (typeof ctx.wellnessScore === "number") lines.push(`- Wellness score: ${ctx.wellnessScore}/100`);
   if (typeof ctx.streak === "number") lines.push(`- Check-in streak: ${ctx.streak} days`);
+  if (ctx.autoSymptomFocus) {
+    const f = ctx.autoSymptomFocus;
+    lines.push("");
+    lines.push(`AUTO-INITIATED CONVERSATION: The user just logged a new symptom and opened chat. Greet them warmly by acknowledging the symptom, then analyze it. Cover, in a natural conversational flow (not a checklist): the symptom name "${f.name}", severity ${f.severity}/5, duration (${f.durationDays ?? 1} day${(f.durationDays ?? 1) === 1 ? "" : "s"}), 2-3 possible causes, 2-3 self-care suggestions, and whether medical attention may be needed for this severity. End with one gentle follow-up question. Do NOT wait for the user to speak first — this is your opening message.`);
+    if (f.notes) lines.push(`User's notes about this symptom: "${f.notes}"`);
+  }
   return lines.join("\n");
 }
 

@@ -73,7 +73,10 @@ function AddSymptoms() {
   const save = async () => {
     if (!selected) return;
     try {
-      await add.mutateAsync({ symptom_name: selected, severity, notes: notes || null });
+      const res = await add.mutateAsync({ symptom_name: selected, severity, notes: notes || null });
+      if (typeof window !== "undefined" && res?.id) {
+        localStorage.setItem("sm.pendingSymptomChat", res.id);
+      }
       toast.success("Symptom logged ✨");
       router.navigate({ to: "/" });
     } catch (e) {
