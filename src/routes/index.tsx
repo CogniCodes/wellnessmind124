@@ -287,7 +287,7 @@ function sameDay(a: Date, b: Date) {
 }
 
 function lastNDaysMoodScore(moods: MoodRow[], n: number) {
-  const out: { label: string; score: number; mood?: string }[] = [];
+  const out: { label: string; date: string; score: number; mood?: string }[] = [];
   const today = new Date();
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date(today);
@@ -296,9 +296,39 @@ function lastNDaysMoodScore(moods: MoodRow[], n: number) {
     const score = dayMoods.length
       ? dayMoods.reduce((s, m) => s + (MOOD_SCORE[m.mood] ?? 3), 0) / dayMoods.length
       : 0;
-    out.push({ label: DAY_LABELS[d.getDay()], score: Number(score.toFixed(1)), mood: dayMoods[0]?.mood });
+    out.push({
+      label: DAY_LABELS[d.getDay()],
+      date: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      score: Number(score.toFixed(1)),
+      mood: dayMoods[0]?.mood,
+    });
   }
   return out;
+}
+
+function MoodTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { date: string; score: number; mood?: string } }> }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  return (
+    <div className="glass-card rounded-2xl px-3 py-2 text-xs soft-shadow">
+      <p className="font-semibold">{d.date}</p>
+      <p className="text-muted-foreground">
+        {d.mood ? <>{moodEmoji(d.mood)} {d.mood} · {d.score}/5</> : "No mood logged"}
+      </p>
+    </div>
+  );
+}
+
+function WellnessTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { date: string; w: number } }> }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  const label = d.w >= 75 ? "Thriving" : d.w >= 55 ? "Steady" : d.w >= 35 ? "Building" : "Tender";
+  return (
+    <div className="glass-card rounded-2xl px-3 py-2 text-xs soft-shadow">
+      <p className="font-semibold">{d.date}</p>
+      <p className="text-muted-foreground">Wellness {d.w}/100 · {label}</p>
+    </div>
+  );
 }
 
 function topSymptoms(logs: SymptomRow[]) {
