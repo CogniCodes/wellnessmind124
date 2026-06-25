@@ -1,9 +1,11 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useRouter } from "@tanstack/react-router";
 import {
   Home, MessageCircle, Users, Bot, BarChart3, ClipboardList,
   HeartPulse, Gamepad2, User, LogOut, Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { useVisitor } from "@/lib/visitor";
 
 const primary = [
   { to: "/", label: "Dashboard", icon: Home },
