@@ -124,8 +124,12 @@ function Dashboard() {
           icon={<HeartPulse className="h-5 w-5 text-primary" />}
           tint="var(--lavender)"
           title="Wellness Score"
-          value={`${wellnessScore} / 100`}
-          sub={wellnessScore >= 70 ? "You're doing well 💜" : "Small steps add up 🌱"}
+          value={wellnessScore == null ? "—" : `${wellnessScore} / 100`}
+          sub={
+            wellnessScore == null
+              ? "Log a few entries to unlock your score."
+              : wellnessScore >= 70 ? "You're doing well 💜" : "Small steps add up 🌱"
+          }
         />
       </div>
 
