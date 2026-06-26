@@ -55,7 +55,18 @@ function MoodHistory() {
                 <LineChart data={week}>
                   <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis hide domain={[0, 5]} />
-                  <Line type="monotone" dataKey="score" stroke="var(--primary)" strokeWidth={3} dot={{ r: 4, fill: "var(--primary)" }} />
+                  <Tooltip
+                    cursor={{ stroke: "var(--primary)", strokeOpacity: 0.25 }}
+                    content={<MoodTooltip />}
+                    wrapperStyle={{ outline: "none" }}
+                  />
+                  <Line
+                    type="monotone" dataKey="score"
+                    stroke="var(--primary)" strokeWidth={3}
+                    dot={{ r: 4, fill: "var(--primary)" }}
+                    activeDot={{ r: 7, fill: "var(--secondary)", stroke: "var(--card)", strokeWidth: 2 }}
+                    isAnimationActive={false}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
