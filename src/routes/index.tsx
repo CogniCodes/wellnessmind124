@@ -259,9 +259,14 @@ function StatCard({ icon, tint, title, value, sub }: { icon: React.ReactNode; ti
   );
 }
 
-function InsightCard({ tint, emoji, title, body }: { tint: string; emoji: string; title: string; body: string }) {
+function InsightCard({ tint, emoji, title, body, onOpen }: { tint: string; emoji: string; title: string; body: string; onOpen: () => void }) {
   return (
-    <div className="rounded-3xl p-4 soft-shadow" style={{ background: `color-mix(in oklab, ${tint} 65%, var(--card))` }}>
+    <button
+      onClick={onOpen}
+      className="rounded-3xl p-4 soft-shadow text-left w-full transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary/40"
+      style={{ background: `color-mix(in oklab, ${tint} 65%, var(--card))` }}
+      aria-label={`Open ${title}`}
+    >
       <div className="flex items-center gap-2 mb-1.5">
         <span className="text-lg">{emoji}</span>
         <span className="text-sm font-display font-semibold">{title}</span>
@@ -270,7 +275,7 @@ function InsightCard({ tint, emoji, title, body }: { tint: string; emoji: string
       <div className="mt-3 grid h-7 w-7 place-items-center rounded-full bg-card">
         <ChevronRight className="h-4 w-4 text-primary" />
       </div>
-    </div>
+    </button>
   );
 }
 
