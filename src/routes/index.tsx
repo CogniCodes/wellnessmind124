@@ -147,11 +147,21 @@ function Dashboard() {
       {/* Insights */}
       <Section title="Your Insights">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <InsightCard tint="var(--soft-peach)" emoji="😊" title="Mood Insight" body={insight.mood} />
-          <InsightCard tint="var(--soft-sky)" emoji="📊" title="Symptom Insight" body={insight.symptom} />
-          <InsightCard tint="var(--lavender)" emoji="⭐" title="AI Suggestion" body={insight.suggestion} />
+          <InsightCard tint="var(--soft-peach)" emoji="😊" title="Mood Insight" body={insight.mood}
+            onOpen={() => setInsightKind("mood")} />
+          <InsightCard tint="var(--soft-sky)" emoji="📊" title="Symptom Insight" body={insight.symptom}
+            onOpen={() => setInsightKind("symptom")} />
+          <InsightCard tint="var(--lavender)" emoji="⭐" title="AI Suggestion" body={insight.suggestion}
+            onOpen={() => setInsightKind("ai")} />
         </div>
       </Section>
+
+      <InsightDetailDrawer
+        kind={insightKind}
+        onOpenChange={(open) => { if (!open) setInsightKind(null); }}
+        moods={moods}
+        symptoms={symptoms}
+      />
 
       {/* Progress */}
       <Section title="Your Progress">
