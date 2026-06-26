@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SymptomsHistoryRouteImport } from './routes/symptoms-history'
 import { Route as SupportCircleRouteImport } from './routes/support-circle'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MoodHistoryRouteImport } from './routes/mood-history'
 import { Route as MedicalRouteImport } from './routes/medical'
 import { Route as GamesRouteImport } from './routes/games'
@@ -33,6 +34,11 @@ const SupportCircleRoute = SupportCircleRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MoodHistoryRoute = MoodHistoryRouteImport.update({
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/games': typeof GamesRoute
   '/medical': typeof MedicalRoute
   '/mood-history': typeof MoodHistoryRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/support-circle': typeof SupportCircleRoute
   '/symptoms-history': typeof SymptomsHistoryRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/games': typeof GamesRoute
   '/medical': typeof MedicalRoute
   '/mood-history': typeof MoodHistoryRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/support-circle': typeof SupportCircleRoute
   '/symptoms-history': typeof SymptomsHistoryRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/games': typeof GamesRoute
   '/medical': typeof MedicalRoute
   '/mood-history': typeof MoodHistoryRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/support-circle': typeof SupportCircleRoute
   '/symptoms-history': typeof SymptomsHistoryRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/medical'
     | '/mood-history'
+    | '/privacy'
     | '/profile'
     | '/support-circle'
     | '/symptoms-history'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/medical'
     | '/mood-history'
+    | '/privacy'
     | '/profile'
     | '/support-circle'
     | '/symptoms-history'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/medical'
     | '/mood-history'
+    | '/privacy'
     | '/profile'
     | '/support-circle'
     | '/symptoms-history'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   GamesRoute: typeof GamesRoute
   MedicalRoute: typeof MedicalRoute
   MoodHistoryRoute: typeof MoodHistoryRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   SupportCircleRoute: typeof SupportCircleRoute
   SymptomsHistoryRoute: typeof SymptomsHistoryRoute
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mood-history': {
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   GamesRoute: GamesRoute,
   MedicalRoute: MedicalRoute,
   MoodHistoryRoute: MoodHistoryRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   SupportCircleRoute: SupportCircleRoute,
   SymptomsHistoryRoute: SymptomsHistoryRoute,
