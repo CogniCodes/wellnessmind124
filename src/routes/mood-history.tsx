@@ -4,7 +4,8 @@ import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { useMoods, type MoodRow } from "@/lib/db-hooks";
 import { moodEmoji } from "@/lib/moods";
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { moodEmoji as moodEmojiFn } from "@/lib/moods";
 
 export const Route = createFileRoute("/mood-history")({
   head: () => ({ meta: [{ title: "Mood History · SereneMind" }] }),
