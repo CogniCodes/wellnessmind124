@@ -231,22 +231,52 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          allergies: string | null
+          avatar_url: string | null
+          blood_group: string | null
+          contact_number: string | null
           created_at: string
+          dob: string | null
+          gender: string | null
+          height_cm: number | null
           id: string
+          medications: string | null
           name: string
+          updated_at: string
           user_id: string
+          weight_kg: number | null
         }
         Insert: {
+          allergies?: string | null
+          avatar_url?: string | null
+          blood_group?: string | null
+          contact_number?: string | null
           created_at?: string
+          dob?: string | null
+          gender?: string | null
+          height_cm?: number | null
           id?: string
+          medications?: string | null
           name: string
+          updated_at?: string
           user_id: string
+          weight_kg?: number | null
         }
         Update: {
+          allergies?: string | null
+          avatar_url?: string | null
+          blood_group?: string | null
+          contact_number?: string | null
           created_at?: string
+          dob?: string | null
+          gender?: string | null
+          height_cm?: number | null
           id?: string
+          medications?: string | null
           name?: string
+          updated_at?: string
           user_id?: string
+          weight_kg?: number | null
         }
         Relationships: []
       }

@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { useMoods, type MoodRow } from "@/lib/db-hooks";
 import { moodEmoji } from "@/lib/moods";
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export const Route = createFileRoute("/mood-history")({
   head: () => ({ meta: [{ title: "Mood History · SereneMind" }] }),
@@ -55,7 +55,18 @@ function MoodHistory() {
                 <LineChart data={week}>
                   <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis hide domain={[0, 5]} />
-                  <Line type="monotone" dataKey="score" stroke="var(--primary)" strokeWidth={3} dot={{ r: 4, fill: "var(--primary)" }} />
+                  <Tooltip
+                    cursor={{ stroke: "var(--primary)", strokeOpacity: 0.25 }}
+                    content={<MoodTooltip />}
+                    wrapperStyle={{ outline: "none" }}
+                  />
+                  <Line
+                    type="monotone" dataKey="score"
+                    stroke="var(--primary)" strokeWidth={3}
+                    dot={{ r: 4, fill: "var(--primary)" }}
+                    activeDot={{ r: 7, fill: "var(--secondary)", stroke: "var(--card)", strokeWidth: 2 }}
+                    isAnimationActive={false}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -111,14 +122,35 @@ function sameDay(a: Date, b: Date) {
 function lastN(moods: MoodRow[], n: number) {
   const labels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   const today = new Date();
-  const out = [];
+  const out: { label: string; date: string; time: string; mood: string | null; score: number }[] = [];
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date(today); d.setDate(today.getDate() - i);
     const day = moods.filter((m) => sameDay(new Date(m.created_at), d));
     const score = day.length ? day.reduce((s, m) => s + (MOOD_SCORE[m.mood] ?? 3), 0) / day.length : 0;
-    out.push({ label: labels[d.getDay()], score: Number(score.toFixed(1)) });
+    const first = day[0];
+    out.push({
+      label: labels[d.getDay()],
+      date: d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }),
+      time: first ? new Date(first.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—",
+      mood: first?.mood ?? null,
+      score: Number(score.toFixed(1)),
+    });
   }
   return out;
+}
+
+function MoodTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { date: string; time: string; mood: string | null; score: number } }> }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  return (
+    <div className="glass-card rounded-2xl px-3 py-2 text-xs soft-shadow">
+      <p className="font-semibold">{d.date}</p>
+      <p className="text-muted-foreground" suppressHydrationWarning>{d.time}</p>
+      <p className="mt-0.5">
+        {d.mood ? <>{moodEmoji(d.mood)} {d.mood} · {d.score}/5</> : "No mood logged"}
+      </p>
+    </div>
+  );
 }
 function monthGrid(moods: MoodRow[]) {
   const today = new Date();

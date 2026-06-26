@@ -7,6 +7,7 @@ import { MOODS, moodEmoji } from "@/lib/moods";
 import { useVisitor, greetingFor } from "@/lib/visitor";
 import { useMoods, useSetTodayMood, useSymptoms, type MoodRow, type SymptomRow } from "@/lib/db-hooks";
 import { NotificationsDrawer, useUnreadNotifCount } from "@/components/notifications-drawer";
+import { InsightDetailDrawer, type InsightKind } from "@/components/insight-detail-drawer";
 import {
   Area, AreaChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
@@ -27,6 +28,7 @@ function Dashboard() {
   const { data: symptoms = [] } = useSymptoms();
   const setMood = useSetTodayMood();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [insightKind, setInsightKind] = useState<InsightKind>(null);
   const unread = useUnreadNotifCount();
 
   const name = visitor?.name ?? "friend";
@@ -34,7 +36,8 @@ function Dashboard() {
   const todayMood = moods.find((m) => isToday(m.created_at))?.mood;
 
   const streak = computeStreak(moods);
-  const wellnessScore = computeWellness(moods, symptoms);
+  const hasEnoughForScore = moods.length >= 3 || symptoms.length >= 1;
+  const wellnessScore = hasEnoughForScore ? computeWellness(moods, symptoms) : null;
 
   const trendData = lastNDaysMoodScore(moods, 7);
   const wellnessData = lastNDaysMoodScore(moods, 14).map((d, i) => ({
@@ -42,6 +45,7 @@ function Dashboard() {
   }));
   const symptomFreq = topSymptoms(symptoms);
   const insight = buildInsight(moods, symptoms);
+
 
   return (
     <AppShell>
@@ -120,8 +124,12 @@ function Dashboard() {
           icon={<HeartPulse className="h-5 w-5 text-primary" />}
           tint="var(--lavender)"
           title="Wellness Score"
-          value={`${wellnessScore} / 100`}
-          sub={wellnessScore >= 70 ? "You're doing well 💜" : "Small steps add up 🌱"}
+          value={wellnessScore == null ? "—" : `${wellnessScore} / 100`}
+          sub={
+            wellnessScore == null
+              ? "Log a few entries to unlock your score."
+              : wellnessScore >= 70 ? "You're doing well 💜" : "Small steps add up 🌱"
+          }
         />
       </div>
 
@@ -139,11 +147,21 @@ function Dashboard() {
       {/* Insights */}
       <Section title="Your Insights">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <InsightCard tint="var(--soft-peach)" emoji="😊" title="Mood Insight" body={insight.mood} />
-          <InsightCard tint="var(--soft-sky)" emoji="📊" title="Symptom Insight" body={insight.symptom} />
-          <InsightCard tint="var(--lavender)" emoji="⭐" title="AI Suggestion" body={insight.suggestion} />
+          <InsightCard tint="var(--soft-peach)" emoji="😊" title="Mood Insight" body={insight.mood}
+            onOpen={() => setInsightKind("mood")} />
+          <InsightCard tint="var(--soft-sky)" emoji="📊" title="Symptom Insight" body={insight.symptom}
+            onOpen={() => setInsightKind("symptom")} />
+          <InsightCard tint="var(--lavender)" emoji="⭐" title="AI Suggestion" body={insight.suggestion}
+            onOpen={() => setInsightKind("ai")} />
         </div>
       </Section>
+
+      <InsightDetailDrawer
+        kind={insightKind}
+        onOpenChange={(open) => { if (!open) setInsightKind(null); }}
+        moods={moods}
+        symptoms={symptoms}
+      />
 
       {/* Progress */}
       <Section title="Your Progress">
@@ -241,9 +259,14 @@ function StatCard({ icon, tint, title, value, sub }: { icon: React.ReactNode; ti
   );
 }
 
-function InsightCard({ tint, emoji, title, body }: { tint: string; emoji: string; title: string; body: string }) {
+function InsightCard({ tint, emoji, title, body, onOpen }: { tint: string; emoji: string; title: string; body: string; onOpen: () => void }) {
   return (
-    <div className="rounded-3xl p-4 soft-shadow" style={{ background: `color-mix(in oklab, ${tint} 65%, var(--card))` }}>
+    <button
+      onClick={onOpen}
+      className="rounded-3xl p-4 soft-shadow text-left w-full transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-primary/40"
+      style={{ background: `color-mix(in oklab, ${tint} 65%, var(--card))` }}
+      aria-label={`Open ${title}`}
+    >
       <div className="flex items-center gap-2 mb-1.5">
         <span className="text-lg">{emoji}</span>
         <span className="text-sm font-display font-semibold">{title}</span>
@@ -252,7 +275,7 @@ function InsightCard({ tint, emoji, title, body }: { tint: string; emoji: string
       <div className="mt-3 grid h-7 w-7 place-items-center rounded-full bg-card">
         <ChevronRight className="h-4 w-4 text-primary" />
       </div>
-    </div>
+    </button>
   );
 }
 

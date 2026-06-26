@@ -142,10 +142,45 @@ export function useChat() {
 }
 
 export async function insertChat(userId: string, role: "user" | "assistant", message: string) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("ai_chat_messages")
-    .insert({ user_id: userId, role, message });
+    .insert({ user_id: userId, role, message })
+    .select("*")
+    .single();
   if (error) throw error;
+  return data as ChatRow;
+}
+
+/** Append a message to the chat cache immediately so the UI updates without a refetch. */
+export function useAppendChat() {
+  const userId = useVisitorId();
+  const qc = useQueryClient();
+  return async (role: "user" | "assistant", message: string) => {
+    const row = await insertChat(userId, role, message);
+    qc.setQueryData<ChatRow[]>(["chat", userId], (prev) => {
+      const list = prev ?? [];
+      if (list.some((m) => m.id === row.id)) return list;
+      return [...list, row];
+    });
+    return row;
+  };
+}
+
+export function useClearChat() {
+  const userId = useVisitorId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("ai_chat_messages")
+        .delete()
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.setQueryData<ChatRow[]>(["chat", userId], []);
+    },
+  });
 }
 
 // ---------- Contacts ----------

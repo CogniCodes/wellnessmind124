@@ -1,10 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, MoreHorizontal, Send, Smile, Loader2 } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, Send, Smile, Loader2, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { useChat, useMoods, useSymptoms, insertChat } from "@/lib/db-hooks";
+import { useChat, useMoods, useSymptoms, useAppendChat, useClearChat } from "@/lib/db-hooks";
 import { useVisitorId } from "@/lib/visitor";
 import { sendChat } from "@/lib/ai.functions";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({ meta: [{ title: "AI Companion · SereneMind" }] }),
@@ -16,12 +24,17 @@ function ChatPage() {
   const { data: messages = [], isLoading } = useChat();
   const { data: moods = [] } = useMoods();
   const { data: symptoms = [] } = useSymptoms();
+  const appendChat = useAppendChat();
+  const clearChat = useClearChat();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const autoTriggeredRef = useRef(false);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, loading]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages.length, loading]);
 
   const isToday = (iso: string) => {
     const d = new Date(iso); const n = new Date();
@@ -36,7 +49,7 @@ function ChatPage() {
     const pendingId = localStorage.getItem("sm.pendingSymptomChat");
     if (!pendingId) return;
     const sym = symptoms.find((s) => s.id === pendingId);
-    if (!sym) return; // wait until symptoms load or skip if stale
+    if (!sym) return;
     autoTriggeredRef.current = true;
     localStorage.removeItem("sm.pendingSymptomChat");
 
@@ -65,15 +78,12 @@ function ChatPage() {
               name: s.symptom_name, severity: s.severity, at: s.created_at, notes: s.notes ?? undefined,
             })),
             autoSymptomFocus: {
-              name: sym.symptom_name,
-              severity: sym.severity,
-              at: sym.created_at,
-              notes: sym.notes,
-              durationDays,
+              name: sym.symptom_name, severity: sym.severity, at: sym.created_at,
+              notes: sym.notes, durationDays,
             },
           },
         }});
-        await insertChat(visitorId, "assistant", reply.text);
+        await appendChat("assistant", reply.text);
       } catch (e) {
         console.error(e);
       } finally {
@@ -89,8 +99,7 @@ function ChatPage() {
     setInput("");
     setLoading(true);
     try {
-      await insertChat(visitorId, "user", text);
-
+      await appendChat("user", text);
       const reply = await sendChat({ data: {
         messages: [
           ...messages.map((m) => ({ role: m.role, content: m.message })),
@@ -104,13 +113,40 @@ function ChatPage() {
           })),
         },
       }});
-      await insertChat(visitorId, "assistant", reply.text);
+      await appendChat("assistant", reply.text);
     } catch (e) {
       console.error(e);
-      await insertChat(visitorId, "assistant",
-        "I'm having trouble responding right now. Please try again in a moment. 💜");
+      try {
+        await appendChat("assistant",
+          "I'm having trouble responding right now. Please try again in a moment. 💜");
+      } catch { /* noop */ }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClear = async () => {
+    try {
+      await clearChat.mutateAsync();
+      setConfirmClear(false);
+      toast.success("Chat cleared. Starting fresh 🌱");
+      // Trigger a friendly opener so a new conversation starts automatically.
+      setLoading(true);
+      try {
+        const reply = await sendChat({ data: {
+          messages: [{ role: "user" as const, content: "[fresh-start] Please greet me and ask how I'm feeling today." }],
+          context: {
+            currentMood: moods.find((m) => isToday(m.created_at))?.mood,
+            recentMoods: moods.slice(0, 7).map((m) => ({ mood: m.mood, at: m.created_at })),
+          },
+        }});
+        await appendChat("assistant", reply.text);
+      } finally {
+        setLoading(false);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not clear chat. Try again.");
     }
   };
 
@@ -124,7 +160,22 @@ function ChatPage() {
           <p className="font-display font-bold text-sm mt-1">AI Wellness Companion <span className="text-secondary">✨</span></p>
           <p className="text-[10px] text-muted-foreground">Always here for you</p>
         </div>
-        <button className="grid h-11 w-11 place-items-center rounded-full glass-card"><MoreHorizontal className="h-5 w-5" /></button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="grid h-11 w-11 place-items-center rounded-full glass-card" aria-label="Chat menu">
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              onClick={() => setConfirmClear(true)}
+              disabled={messages.length === 0 || clearChat.isPending}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Clear chat
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       <div className="rounded-2xl px-3 py-2 text-[11px] text-center mb-3"
@@ -138,7 +189,7 @@ function ChatPage() {
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
         )}
-        {!isLoading && messages.length === 0 && (
+        {!isLoading && messages.length === 0 && !loading && (
           <div className="glass-card rounded-3xl p-5 text-center text-sm text-muted-foreground">
             Hi 🌸 Tell me how you're feeling today, and I'll be here for you.
           </div>
@@ -176,6 +227,23 @@ function ChatPage() {
           </button>
         </div>
       </div>
+
+      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear this conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes your AI chat history. Your profile, moods, symptoms, and other health data are kept.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClear} className="bg-destructive text-white hover:bg-destructive/90">
+              Clear chat
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
