@@ -7,6 +7,7 @@ import { MOODS, moodEmoji } from "@/lib/moods";
 import { useVisitor, greetingFor } from "@/lib/visitor";
 import { useMoods, useSetTodayMood, useSymptoms, type MoodRow, type SymptomRow } from "@/lib/db-hooks";
 import { NotificationsDrawer, useUnreadNotifCount } from "@/components/notifications-drawer";
+import { InsightDetailDrawer, type InsightKind } from "@/components/insight-detail-drawer";
 import {
   Area, AreaChart, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
