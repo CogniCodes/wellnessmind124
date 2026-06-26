@@ -1,26 +1,38 @@
 // User-ID based identity (no auth). The User ID is the sole credential.
-// Exports keep "visitor" naming for backward compatibility with existing callers,
-// but everything maps to the new public.user_profiles table keyed by text user_id.
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "sm.user_id";
 
-export type CurrentUser = { userId: string; name: string };
+export type CurrentUser = {
+  userId: string;
+  name: string;
+  dob: string | null;
+  gender: string | null;
+  blood_group: string | null;
+  contact_number: string | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  avatar_url: string | null;
+  medications: string | null;
+  allergies: string | null;
+};
+
+export type ProfileUpdate = Partial<Omit<CurrentUser, "userId">>;
+
 type Ctx = {
   visitor: CurrentUser | null;
   loading: boolean;
-  /** Look up an existing User ID and load the profile. Throws if not found. */
   signInWithId: (userId: string) => Promise<CurrentUser>;
-  /** Create a new account for the given display name. Returns the generated User ID. */
   createAccount: (name: string) => Promise<CurrentUser>;
   updateName: (name: string) => Promise<void>;
+  updateProfile: (patch: ProfileUpdate) => Promise<void>;
   signOut: () => void;
 };
 
 const VisitorCtx = createContext<Ctx | null>(null);
 
-const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no confusing chars
+const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 function randSuffix(len = 4): string {
   let out = "";
   const arr = new Uint32Array(len);
@@ -31,8 +43,7 @@ function randSuffix(len = 4): string {
 
 function prefixFromName(name: string): string {
   const letters = name.toUpperCase().replace(/[^A-Z]/g, "");
-  const base = (letters + "XXX").slice(0, 3);
-  return base;
+  return (letters + "XXX").slice(0, 3);
 }
 
 async function idExists(id: string): Promise<boolean> {
@@ -50,18 +61,29 @@ async function generateUniqueId(name: string): Promise<string> {
     const candidate = `${prefix}-${randSuffix(4)}`;
     if (!(await idExists(candidate))) return candidate;
   }
-  // Extremely unlikely fallback
   return `${prefix}-${randSuffix(6)}`;
 }
 
 async function loadProfile(userId: string): Promise<CurrentUser | null> {
   const { data, error } = await supabase
     .from("user_profiles")
-    .select("user_id, name")
+    .select("user_id, name, dob, gender, blood_group, contact_number, height_cm, weight_kg, avatar_url, medications, allergies")
     .eq("user_id", userId)
     .maybeSingle();
   if (error || !data) return null;
-  return { userId: data.user_id, name: data.name };
+  return {
+    userId: data.user_id,
+    name: data.name,
+    dob: data.dob,
+    gender: data.gender,
+    blood_group: data.blood_group,
+    contact_number: data.contact_number,
+    height_cm: data.height_cm,
+    weight_kg: data.weight_kg,
+    avatar_url: data.avatar_url,
+    medications: data.medications,
+    allergies: data.allergies,
+  };
 }
 
 export function VisitorProvider({ children }: { children: ReactNode }) {
@@ -101,7 +123,11 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
       .from("user_profiles")
       .insert({ user_id: userId, name: trimmed });
     if (error) throw error;
-    const profile: CurrentUser = { userId, name: trimmed };
+    const profile: CurrentUser = {
+      userId, name: trimmed, dob: null, gender: null, blood_group: null,
+      contact_number: null, height_cm: null, weight_kg: null,
+      avatar_url: null, medications: null, allergies: null,
+    };
     localStorage.setItem(STORAGE_KEY, userId);
     setVisitor(profile);
     return profile;
@@ -119,13 +145,23 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
     setVisitor({ ...visitor, name: trimmed });
   };
 
+  const updateProfile = async (patch: ProfileUpdate) => {
+    if (!visitor) return;
+    const { error } = await supabase
+      .from("user_profiles")
+      .update(patch)
+      .eq("user_id", visitor.userId);
+    if (error) throw error;
+    setVisitor({ ...visitor, ...patch });
+  };
+
   const signOut = () => {
     localStorage.removeItem(STORAGE_KEY);
     setVisitor(null);
   };
 
   return (
-    <VisitorCtx.Provider value={{ visitor, loading, signInWithId, createAccount, updateName, signOut }}>
+    <VisitorCtx.Provider value={{ visitor, loading, signInWithId, createAccount, updateName, updateProfile, signOut }}>
       {children}
     </VisitorCtx.Provider>
   );
@@ -137,7 +173,6 @@ export function useVisitor() {
   return ctx;
 }
 
-/** Returns the current user's User ID (empty string while loading / signed out). */
 export function useVisitorId(): string {
   const { visitor } = useVisitor();
   return visitor?.userId ?? "";
