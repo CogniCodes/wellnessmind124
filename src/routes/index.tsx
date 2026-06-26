@@ -28,6 +28,7 @@ function Dashboard() {
   const { data: symptoms = [] } = useSymptoms();
   const setMood = useSetTodayMood();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [insightKind, setInsightKind] = useState<InsightKind>(null);
   const unread = useUnreadNotifCount();
 
   const name = visitor?.name ?? "friend";
@@ -35,7 +36,8 @@ function Dashboard() {
   const todayMood = moods.find((m) => isToday(m.created_at))?.mood;
 
   const streak = computeStreak(moods);
-  const wellnessScore = computeWellness(moods, symptoms);
+  const hasEnoughForScore = moods.length >= 3 || symptoms.length >= 1;
+  const wellnessScore = hasEnoughForScore ? computeWellness(moods, symptoms) : null;
 
   const trendData = lastNDaysMoodScore(moods, 7);
   const wellnessData = lastNDaysMoodScore(moods, 14).map((d, i) => ({
@@ -43,6 +45,7 @@ function Dashboard() {
   }));
   const symptomFreq = topSymptoms(symptoms);
   const insight = buildInsight(moods, symptoms);
+
 
   return (
     <AppShell>
