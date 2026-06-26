@@ -144,6 +144,27 @@ function ContactEditor({ contact, saving, onSave, onDelete, onClose }: {
   const [name, setName] = useState(contact?.name ?? "");
   const [relationship, setRelationship] = useState(contact?.relationship ?? "");
   const [phone, setPhone] = useState(contact?.phone_number ?? "");
+  const [phoneErr, setPhoneErr] = useState<string | null>(null);
+
+  const validatePhone = (v: string): string | null => {
+    if (!v) return null;
+    if (!/^\d+$/.test(v)) return "Digits only — letters and symbols are not allowed.";
+    if (v.length < 6 || v.length > 15) return "Phone must be 6–15 digits.";
+    return null;
+  };
+
+  const handlePhoneChange = (raw: string) => {
+    const cleaned = raw.replace(/\D/g, "");
+    setPhone(cleaned);
+    setPhoneErr(validatePhone(cleaned));
+  };
+
+  const handleSubmit = () => {
+    const err = validatePhone(phone);
+    if (err) { setPhoneErr(err); toast.error(err); return; }
+    if (!name.trim()) { toast.error("Name is required."); return; }
+    onSave({ name, relationship, phone_number: phone });
+  };
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" onClick={onClose}>
@@ -155,7 +176,14 @@ function ContactEditor({ contact, saving, onSave, onDelete, onClose }: {
         <div className="space-y-3">
           <Field label="Name" value={name} onChange={setName} />
           <Field label="Relationship" value={relationship} onChange={setRelationship} />
-          <Field label="Phone" value={phone} onChange={setPhone} />
+          <Field
+            label="Phone (digits only)"
+            value={phone}
+            onChange={handlePhoneChange}
+            inputMode="numeric"
+            placeholder="e.g. 5551234567"
+            error={phoneErr}
+          />
         </div>
         <div className="flex gap-2 mt-5">
           {contact && (
@@ -164,8 +192,8 @@ function ContactEditor({ contact, saving, onSave, onDelete, onClose }: {
               <Trash2 className="h-4 w-4" />
             </button>
           )}
-          <button onClick={() => onSave({ name, relationship, phone_number: phone })}
-            disabled={saving || !name.trim()}
+          <button onClick={handleSubmit}
+            disabled={saving || !name.trim() || !!phoneErr}
             className="flex-1 rounded-full py-3 text-white font-semibold disabled:opacity-50"
             style={{ background: "var(--primary)" }}>
             {saving ? "Saving..." : "Save"}
@@ -176,12 +204,18 @@ function ContactEditor({ contact, saving, onSave, onDelete, onClose }: {
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function Field({ label, value, onChange, inputMode, placeholder, error }: {
+  label: string; value: string; onChange: (v: string) => void;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  placeholder?: string; error?: string | null;
+}) {
   return (
     <label className="block">
       <span className="text-xs text-muted-foreground">{label}</span>
       <input value={value} onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1 rounded-2xl bg-muted/40 px-3 py-2.5 text-sm outline-none" />
+        inputMode={inputMode} placeholder={placeholder}
+        className={`w-full mt-1 rounded-2xl bg-muted/40 px-3 py-2.5 text-sm outline-none ${error ? "ring-2 ring-destructive" : ""}`} />
+      {error && <p className="text-[11px] text-destructive mt-1">{error}</p>}
     </label>
   );
 }
