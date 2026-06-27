@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, MoreHorizontal, Send, Smile, Loader2, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useChat, useMoods, useSymptoms, useAppendChat, useClearChat } from "@/lib/db-hooks";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useVisitorId } from "@/lib/visitor";
 import { sendChat } from "@/lib/ai.functions";
 import {
