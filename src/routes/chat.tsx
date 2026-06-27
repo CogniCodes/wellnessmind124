@@ -130,6 +130,8 @@ function ChatPage() {
         },
       }});
       await appendChat("assistant", reply.text);
+      qc.invalidateQueries({ queryKey: ["chat", visitorId] });
+
     } catch (e) {
       console.error(e);
       try {
