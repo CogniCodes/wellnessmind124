@@ -46,16 +46,25 @@ function ChatPage() {
   };
 
   // Auto-start an AI conversation when the user opens chat after logging a symptom.
+  // Dedupes per-symptom-id so reopening chat without a new symptom won't refire.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (autoTriggeredRef.current) return;
     if (isLoading || !visitorId || loading) return;
     const pendingId = localStorage.getItem("sm.pendingSymptomChat");
     if (!pendingId) return;
+    const analyzedKey = `sm.autoAnalyzed.${visitorId}`;
+    const analyzed = (localStorage.getItem(analyzedKey) || "").split(",").filter(Boolean);
+    if (analyzed.includes(pendingId)) {
+      localStorage.removeItem("sm.pendingSymptomChat");
+      autoTriggeredRef.current = true;
+      return;
+    }
     const sym = symptoms.find((s) => s.id === pendingId);
-    if (!sym) return;
+    if (!sym) return; // wait for symptoms query to load
     autoTriggeredRef.current = true;
     localStorage.removeItem("sm.pendingSymptomChat");
+    localStorage.setItem(analyzedKey, [...analyzed, pendingId].slice(-50).join(","));
 
     const firstOccurrence = symptoms
       .filter((s) => s.symptom_name === sym.symptom_name)
@@ -88,14 +97,17 @@ function ChatPage() {
           },
         }});
         await appendChat("assistant", reply.text);
+        qc.invalidateQueries({ queryKey: ["chat", visitorId] });
       } catch (e) {
         console.error(e);
+        autoTriggeredRef.current = false; // allow retry on next open
       } finally {
         setLoading(false);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, visitorId, symptoms.length]);
+
 
   const send = async () => {
     const text = input.trim();
