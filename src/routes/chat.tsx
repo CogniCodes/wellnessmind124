@@ -28,11 +28,13 @@ function ChatPage() {
   const { data: symptoms = [] } = useSymptoms();
   const appendChat = useAppendChat();
   const clearChat = useClearChat();
+  const qc = useQueryClient();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const autoTriggeredRef = useRef(false);
+
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
