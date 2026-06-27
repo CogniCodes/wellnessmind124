@@ -117,9 +117,12 @@ function Dashboard() {
           icon={<Flame className="h-5 w-5" style={{ color: "oklch(0.65 0.2 30)" }} />}
           tint="var(--soft-pink)"
           title="Check-in Streak"
-          value={`${streak} Day${streak === 1 ? "" : "s"}`}
-          sub={streak === 0 ? "Log your first mood to start." : "Keep it up! You're doing great."}
+          value={moodsLoading ? "—" : `${streak} Day${streak === 1 ? "" : "s"}`}
+          sub={moodsLoading
+            ? "Loading your history…"
+            : streak === 0 ? "Log your first mood to start." : "Keep it up! You're doing great."}
         />
+
         <StatCard
           icon={<HeartPulse className="h-5 w-5 text-primary" />}
           tint="var(--lavender)"
